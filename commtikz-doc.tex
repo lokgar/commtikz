@@ -1,0 +1,420 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[margin=1.5cm]{geometry}
+\usepackage{commtikz}
+\usepackage{booktabs}
+\usepackage{listings}
+\usepackage[hidelinks]{hyperref}
+
+\lstset{
+  basicstyle=\ttfamily\small,
+  columns=fullflexible,
+  frame=single,
+  rulecolor=\color{black!20},
+  backgroundcolor=\color{black!3},
+  keywordstyle=\color{OPTcol}\bfseries,
+  commentstyle=\color{black!50}\itshape,
+  language=[LaTeX]TeX,
+  morekeywords={usetikzlibrary,node,draw,tikzset}
+}
+
+\title{\textbf{\texttt{commtikz}: A TikZ Library for Electro-Optical, Photonics,\\RF, and Electronic Schematics}}
+\author{}
+\date{Version \commtikzversion\ (\commtikzversiondate)}
+
+\begin{document}
+\maketitle
+
+\section{Overview \& Quick Start}
+The \texttt{commtikz} package provides native PGF/TikZ node shapes, configurable multi-port anchors (\texttt{W0..Wn}, \texttt{E0..En}, \texttt{N0..Nn}, \texttt{S0..Sn}), background-layer signal-domain connection styles (\texttt{opt}, \texttt{rf}, \texttt{optrf}, \texttt{dc}, \texttt{ctrl}), Bezier connectors (\texttt{arcz}, \texttt{arcn}, \texttt{arc2}, \texttt{arcloop}), 90\textdegree/180\textdegree\ circular turns (\texttt{bend}, \texttt{opt bend}, \texttt{rf bend}, \texttt{uturn}), inline \texttt{to[...]} placement, and an electronic circuit sublibrary for electro-optical and RF/DSP schematics.
+
+\begin{lstlisting}
+\usepackage{commtikz} % or \usepackage{tikz} \usetikzlibrary{commtikz}
+\end{lstlisting}
+
+\section{Core Electro-Optical \& System Component Grid}
+Below is the catalog of the core optical, instrument, and mixed-signal building blocks:
+
+\begin{center}
+\begin{tikzpicture}[commtikz unit=0.82cm]
+  % Row 0 (y = 0)
+  \node[commrect, anchor=west]     at (0, 0)    (c00) {};
+  \node[couplercirc, anchor=west]  at (3.2, 0)  (c01) {};
+  \node[bs, anchor=west]           at (6.4, 0)  (c02) {};
+  \node[fiberspool, draw=black, anchor=west] at (9.6, 0) (c03) {};
+  \node[polctrl, anchor=west]      at (12.8, 0) (c04) {};
+  \node[below=2pt of c00, font=\ttfamily\scriptsize] {commrect};
+  \node[below=2pt of c01, font=\ttfamily\scriptsize] {couplercirc};
+  \node[below=2pt of c02, font=\ttfamily\scriptsize] {bs};
+  \node[below=4pt of c03, font=\ttfamily\scriptsize] {fiberspool};
+  \node[below=2pt of c04, font=\ttfamily\scriptsize] {polctrl};
+
+  % Row 1 (y = -2.2)
+  \node[voa, anchor=west]          at (0, -2.2)    (c10) {};
+  \node[pm, anchor=west]           at (3.2, -2.2)  (c11) {};
+  \node[mzm, anchor=west]          at (6.4, -2.2)  (c12) {};
+  \node[iqm, anchor=west]          at (9.6, -2.2)  (c13) {};
+  \node[isolator, anchor=west]     at (12.8, -2.2) (c14) {};
+  \node[below=2pt of c10, font=\ttfamily\scriptsize] {voa};
+  \node[below=2pt of c11, font=\ttfamily\scriptsize] {pm};
+  \node[below=2pt of c12, font=\ttfamily\scriptsize] {mzm};
+  \node[below=2pt of c13, font=\ttfamily\scriptsize] {iqm};
+  \node[below=2pt of c14, font=\ttfamily\scriptsize] {isolator};
+
+  % Row 2 (y = -4.4)
+  \node[osa, anchor=west]          at (0, -4.4)    (c20) {};
+  \node[esa, anchor=west]          at (3.2, -4.4)  (c21) {};
+  \node[awg, anchor=west]          at (6.4, -4.4)  (c22) {};
+  \node[osc, anchor=west]          at (9.6, -4.4)  (c23) {};
+  \node[fbg, anchor=west]          at (12.8, -4.4) (c24) {};
+  \node[below=2pt of c20, font=\ttfamily\scriptsize] {osa};
+  \node[below=2pt of c21, font=\ttfamily\scriptsize] {esa};
+  \node[below=2pt of c22, font=\ttfamily\scriptsize] {awg};
+  \node[below=2pt of c23, font=\ttfamily\scriptsize] {osc / scope};
+  \node[below=6pt of c24, font=\ttfamily\scriptsize] {fbg};
+
+  % Row 3 (y = -6.6)
+  \node[pd, anchor=west]           at (0, -6.6)    (c30) {};
+  \node[ld, anchor=west]           at (3.2, -6.6)  (c31) {};
+  \node[commcircle, anchor=west]   at (6.4, -6.6)  (c32) {};
+  \node[commsquare, anchor=west]   at (9.6, -6.6)  (c33) {};
+  \node[filter, anchor=west]       at (12.8, -6.6) (c34) {};
+  \node[below=2pt of c30, font=\ttfamily\scriptsize] {pd};
+  \node[below=2pt of c31, font=\ttfamily\scriptsize] {ld};
+  \node[below=2pt of c32, font=\ttfamily\scriptsize] {commcircle};
+  \node[below=2pt of c33, font=\ttfamily\scriptsize] {commsquare};
+  \node[below=2pt of c34, font=\ttfamily\scriptsize] {filter};
+
+  % Row 4 (y = -8.8)
+  \node[amp, anchor=west]          at (0, -8.8)    (c40) {};
+  \node[circulator, anchor=west]   at (3.2, -8.8)  (c41) {};
+  \node[adc, anchor=west]          at (6.4, -8.8)  (c42) {};
+  \node[dac, anchor=west]          at (9.6, -8.8)  (c43) {};
+  \node[mux, anchor=west]          at (12.8, -8.8) (c44) {};
+  \node[below=2pt of c40, font=\ttfamily\scriptsize] {amp};
+  \node[below=2pt of c41, font=\ttfamily\scriptsize] {circulator};
+  \node[below=2pt of c42, font=\ttfamily\scriptsize] {adc};
+  \node[below=2pt of c43, font=\ttfamily\scriptsize] {dac};
+  \node[below=2pt of c44, font=\ttfamily\scriptsize] {mux};
+
+  % Row 5 (y = -11.2)
+  \node[termination, anchor=west]  at (0, -11.2)    (c50) {};
+  \node[mirror, anchor=west]       at (3.2, -11.2)  (c51) {};
+  \node[pbs, anchor=west]          at (6.4, -11.2)  (c52) {};
+  \node[polarizer, anchor=west]    at (9.6, -11.2)  (c53) {};
+  \node[demux, anchor=west]        at (12.8, -11.2) (c54) {};
+  \node[below=8pt of c50, font=\ttfamily\scriptsize] {termination};
+  \node[below=2pt of c51, font=\ttfamily\scriptsize] {mirror};
+  \node[below=2pt of c52, font=\ttfamily\scriptsize] {pbs};
+  \node[below=2pt of c53, font=\ttfamily\scriptsize] {polarizer};
+  \node[below=2pt of c54, font=\ttfamily\scriptsize] {demux};
+\end{tikzpicture}
+\end{center}
+
+\newpage
+\section{DSP, RF \& Coherent Photonics Components}
+\begin{center}
+\begin{tikzpicture}[commtikz unit=0.78cm]
+  % Row 1: Filters & VGA
+  \node[lpf, anchor=west]           at (0, 0)    (d1) {};
+  \node[bpf, anchor=west]           at (3.2, 0)  (d2) {};
+  \node[hpf, anchor=west]           at (6.4, 0)  (d3) {};
+  \node[notchfilter, anchor=west]   at (9.6, 0)  (d4) {};
+  \node[vga, anchor=west]           at (12.8, 0) (d5) {};
+  \node[below=2pt of d1, font=\ttfamily\scriptsize] {lpf (response=lp)};
+  \node[below=2pt of d2, font=\ttfamily\scriptsize] {bpf (response=bp)};
+  \node[below=2pt of d3, font=\ttfamily\scriptsize] {hpf (response=hp)};
+  \node[below=2pt of d4, font=\ttfamily\scriptsize] {notchfilter};
+  \node[below=2pt of d5, font=\ttfamily\scriptsize] {vga};
+
+  % Row 2: Mixers, Summing, Oscillators, Demodulator
+  \node[mixer, anchor=west]         at (0, -1.8)    (d6) {};
+  \node[sum, anchor=west]           at (3.2, -1.8)  (d7) {};
+  \node[sumsigma, anchor=west]      at (6.4, -1.8)  (d8) {};
+  \node[oscillator, anchor=west]    at (9.6, -1.8)  (d9) {};
+  \node[demod, anchor=west]         at (12.8, -1.8) (d10) {};
+  \node[below=2pt of d6, font=\ttfamily\scriptsize] {mixer};
+  \node[below=2pt of d7, font=\ttfamily\scriptsize] {sum};
+  \node[below=2pt of d8, font=\ttfamily\scriptsize] {sumsigma};
+  \node[below=2pt of d9, font=\ttfamily\scriptsize] {oscillator / lo};
+  \node[below=2pt of d10, font=\ttfamily\scriptsize] {demod};
+
+  % Row 3: Coherent & Active Electro-Optical Components
+  \node[bpd, anchor=west]           at (0, -3.7)    (d11) {};
+  \node[hybrid90, anchor=west]      at (2.5, -3.7)  (d12) {};
+  \node[edfa, anchor=west]          at (5.2, -3.7)  (d13) {};
+  \node[ringmod, add drop, anchor=west] at (7.4, -3.7) (d14) {};
+  \node[phaseshifter, anchor=west]  at (10.0, -3.7) (d15) {};
+  \node[dcoupler, anchor=west]      at (12.0, -3.7) (d16) {};
+  \node[splitter, anchor=west]      at (14.2, -3.7) (d17) {};
+  \node[below=2pt of d11, font=\ttfamily\scriptsize] {bpd};
+  \node[below=2pt of d12, font=\ttfamily\scriptsize] {hybrid90};
+  \node[below=2pt of d13, font=\ttfamily\scriptsize] {edfa / soa};
+  \node[below=2pt of d14, font=\ttfamily\scriptsize] {ringmod};
+  \node[below=2pt of d15, font=\ttfamily\scriptsize] {phaseshifter};
+  \node[below=2pt of d16, font=\ttfamily\scriptsize] {dcoupler};
+  \node[below=2pt of d17, font=\ttfamily\scriptsize] {splitter};
+\end{tikzpicture}
+\end{center}
+\vspace{-0.3cm}
+\section{Electronic \& Electrical Components Sublibrary}
+\begin{center}
+\begin{tikzpicture}[commtikz unit=0.78cm]
+  % Row 1: Passives & Diodes
+  \node[resistor, anchor=west]      at (0, 0)    (e1) {};
+  \node[rbox, anchor=west]          at (2.2, 0)  (e2) {};
+  \node[capacitor, anchor=west]     at (4.4, 0)  (e3) {};
+  \node[inductor, anchor=west]      at (6.4, 0)  (e4) {};
+  \node[diode, anchor=west]         at (8.8, 0)  (e5) {};
+  \node[zener, anchor=west]         at (10.8, 0) (e6) {};
+  \node[elpd, anchor=west]          at (12.8, 0) (e7) {};
+  \node[elld, anchor=west]          at (14.8, 0) (e8) {};
+  \node[below=4pt of e1, font=\ttfamily\scriptsize] {resistor / R};
+  \node[below=4pt of e2, font=\ttfamily\scriptsize] {rbox};
+  \node[below=4pt of e3, font=\ttfamily\scriptsize] {capacitor / C};
+  \node[below=6pt of e4, font=\ttfamily\scriptsize] {inductor / L};
+  \node[below=4pt of e5, font=\ttfamily\scriptsize] {diode / D};
+  \node[below=4pt of e6, font=\ttfamily\scriptsize] {zener};
+  \node[below=4pt of e7, font=\ttfamily\scriptsize] {elpd};
+  \node[below=4pt of e8, font=\ttfamily\scriptsize] {elld};
+
+  % Row 2: Sources, Rails, Op-Amp/TIA, Transistors, Bias-Tee & RF Attenuator
+  \node[vsource, anchor=west]       at (0, -1.7)    (e9) {};
+  \node[isource, anchor=west]       at (2.2, -1.7)  (e10) {};
+  \node[acsource, anchor=west]      at (4.4, -1.7)  (e11) {};
+  \node[ground]                     at (6.6, -1.5)  (e12) {};
+  \node[vcc]                        at (8.1, -1.9)  (e13) {};
+  \node[opamp, anchor=west]         at (9.3, -1.7)  (e14) {};
+  \node[nmos, anchor=west]          at (11.5, -1.7) (e15) {};
+  \node[npn, anchor=west]           at (13.2, -1.7) (e16) {};
+  \node[biastee, anchor=west]       at (14.8, -1.7) (e17) {};
+  \node[below=2pt of e9, font=\ttfamily\scriptsize] {vsource};
+  \node[below=2pt of e10, font=\ttfamily\scriptsize] {isource};
+  \node[below=2pt of e11, font=\ttfamily\scriptsize] {acsource};
+  \node[below=2pt of e12, font=\ttfamily\scriptsize] {ground};
+  \node[below=10pt of e13, font=\ttfamily\scriptsize] {vcc};
+  \node[below=2pt of e14, font=\ttfamily\scriptsize] {opamp / tia};
+  \node[below=2pt of e15, font=\ttfamily\scriptsize] {nmos};
+  \node[below=2pt of e16, font=\ttfamily\scriptsize] {npn};
+  \node[below=2pt of e17, font=\ttfamily\scriptsize] {biastee};
+\end{tikzpicture}
+\end{center}
+\vspace{-0.3cm}
+\section{Multi-Port Anchor System, Connectors, Scaling \& Line Width Control}
+Every rectangular and trapezoidal component supports \texttt{numN}, \texttt{numS}, \texttt{numE}, \texttt{numW} (or \texttt{ports=\{W=2, E=4, N=2, S=1\}}), automatically generating evenly spaced anchors \texttt{W0..Wn}, \texttt{E0..En}, \texttt{N0..Nn}, and \texttt{S0..Sn} alongside standard TikZ anchors. Signal connectors (\texttt{opt}, \texttt{rf}, \texttt{optrf}, \texttt{dc}, \texttt{ctrl}) are drawn on the \texttt{background} layer behind all component shapes.
+
+\smallskip
+\noindent\textbf{Scaling:} \texttt{commtikz unit=<dim>} (default \texttt{1cm}) or \texttt{commtikz scale=<num>} sets the base unit $u$ multiplying all dimensionless block keys (\texttt{width}, \texttt{height}, \texttt{height1}, \texttt{height2}, \texttt{comp radius}) and internal arrows. Pass \texttt{commtikz scale=0.75} (or \texttt{width=..., height=...}) on a node to scale a single block, or pass \texttt{[commtikz unit=0.8cm, x=0.8cm, y=0.8cm]} on \texttt{\textbackslash begin\{tikzpicture\}} to scale a whole figure while keeping text labels at document font size.
+
+\begin{center}
+\begin{tikzpicture}[commtikz unit=0.92cm]
+  % Multi-port block demonstration
+  \node[commrect, width=2.5, height=1.8, ports={W=3, E=4, N=2, S=2}, comp label={\footnotesize\textbf{DSP / ASIC}}] (asic) at (0,0) {};
+  \foreach \i in {0,1,2} {
+    \fill[OPTcol] (asic.W\i) circle (1.5pt) node[left=3pt, font=\ttfamily\scriptsize, text=OPTcol] {W\i};
+  }
+  \foreach \i in {0,1,2,3} {
+    \fill[RFcol] (asic.E\i) circle (1.5pt) node[right=3pt, font=\ttfamily\scriptsize, text=RFcol] {E\i};
+  }
+  \foreach \i in {0,1} {
+    \fill[OPTRFcol] (asic.N\i) circle (1.5pt) node[above=3pt, font=\ttfamily\scriptsize, text=OPTRFcol] {N\i};
+    \fill[DCcol] (asic.S\i) circle (1.5pt) node[below=3pt, font=\ttfamily\scriptsize, text=DCcol] {S\i};
+  }
+
+  % Curved connector & waveguide bend showcase
+  \begin{scope}[xshift=4.6cm]
+    \draw[opt, ->-] (0, 0.9) to[arcz] node[above=3pt, font=\ttfamily\scriptsize] {opt, ->-, arcz} (2.5, 0.45);
+    \draw[rf, ->-]  (0, -0.10) to[arc2=22] node[above=2pt, font=\ttfamily\scriptsize] {rf, arc2} (2.5, -0.10);
+    \draw[opt, bend=0.22cm, ->-=0.65] (0, -0.95) -| (0.80, -0.40) -| (2.5, -0.95);
+    \node[below=2pt, font=\ttfamily\scriptsize] at (1.25, -0.95) {bend (90/180\textdegree, all lines)};
+  \end{scope}
+
+  % Inline path placement showcase
+  \begin{scope}[xshift=8.4cm]
+    \draw[opt] (0, 0.45) to[to fiberspool={name=f1, label=above:{\scriptsize\texttt{to fiberspool}}}] (3.0, 0.45)
+                         to[to fbg={name=g1, label=above:{\scriptsize\texttt{to fbg}}}] (5.2, 0.45);
+    \draw[rf]  (0, -0.65) to[to R={name=r1, label=below:{\scriptsize\texttt{to R}}}] (2.6, -0.65)
+                          to[to C={name=c1, label=below:{\scriptsize\texttt{to C}}}] (5.2, -0.65);
+  \end{scope}
+\end{tikzpicture}
+\end{center}
+
+\noindent\textbf{Visual Line Width Matching:} Use \texttt{commtikz line width=<dimen>} (default \texttt{0.6pt}) or \texttt{commtikz match font} (\texttt{0.055em}) to tune stroke weight relative to the surrounding document font:
+\begin{center}
+\begin{tikzpicture}[commtikz unit=0.72cm]
+  \begin{scope}[commtikz line width=0.4pt]
+    \node[mzm] (m1) at (0,0) {};
+    \draw[opt, ->-] (-1.2,0) -- (m1.W0);
+    \draw[opt, ->-] (m1.E0) -- (1.2,0);
+    \node[below=3pt of m1, font=\scriptsize] {\texttt{commtikz line width=0.4pt}};
+  \end{scope}
+  \begin{scope}[xshift=5.2cm, commtikz match font]
+    \node[mzm] (m2) at (0,0) {};
+    \draw[opt, ->-] (-1.2,0) -- (m2.W0);
+    \draw[opt, ->-] (m2.E0) -- (1.2,0);
+    \node[below=3pt of m2, font=\scriptsize] {\texttt{commtikz match font} (\texttt{0.6pt} default)};
+  \end{scope}
+  \begin{scope}[xshift=10.4cm, commtikz line width=0.9pt]
+    \node[mzm] (m3) at (0,0) {};
+    \draw[opt, ->-] (-1.2,0) -- (m3.W0);
+    \draw[opt, ->-] (m3.E0) -- (1.2,0);
+    \node[below=3pt of m3, font=\scriptsize] {\texttt{commtikz line width=0.9pt}};
+  \end{scope}
+\end{tikzpicture}
+\end{center}
+
+\newpage
+\section{Example Electro-Optical \& Circuit Schematics}
+
+\subsection{Setup 1: Intensity-Modulated Direct-Detection (IM/DD) Fiber Link}
+\begin{center}
+\begin{tikzpicture}[commtikz unit=0.72cm]
+  % Optical Transmitter chain
+  \node[ld, label=above:{\footnotesize CW Laser}] (ld) at (0, 0) {};
+  \node[polctrl, right=0.65cm of ld, label=above:{\footnotesize PC}] (pc) {};
+  \node[mzm, right=0.75cm of pc, numN=1, numS=1, label=below:{\footnotesize MZM}] (mzm) {};
+
+  % RF Drive chain above MZM
+  \node[awg, above=1.55cm of mzm, label=above:{\footnotesize AWG}] (awg) {};
+  \node[amp, rotate=-90, transform shape] (rfamp) at ($(awg.S0)!0.5!(mzm.N0)$) {};
+  \draw[rf->] (awg.S0) -- (rfamp.in);
+  \draw[rf->] (rfamp.out) -- (mzm.N0);
+
+  % Fiber transmission span
+  \node[couplercirc, right=0.85cm of mzm] (tap1) {};
+  \node[osa, above=0.80cm of tap1, label=above:{\footnotesize OSA}] (osa) {};
+  \node[fiberspool, right=0.95cm of tap1, label=above:{\footnotesize 50 km SMF}] (smf) {};
+  \node[edfa, right=0.75cm of smf, label=above:{\footnotesize EDFA}] (edfa) {};
+  \node[bpf, right=0.65cm of edfa, label=above:{\footnotesize OBPF}] (obpf) {};
+  \node[voa, right=0.65cm of obpf, label=above:{\footnotesize VOA}] (voa) {};
+  \node[couplercirc, right=0.65cm of voa] (tap2) {};
+  \node[pd, below=0.80cm of tap2, label=below:{\footnotesize Monitor PD}] (mpd) {};
+
+  % Receiver chain
+  \node[pd, right=0.75cm of tap2, label=above:{\footnotesize PIN PD}] (pd) {};
+  \node[lpf, right=0.65cm of pd, label=above:{\footnotesize ELPF}] (elpf) {};
+  \node[osc, right=0.75cm of elpf, label=above:{\footnotesize OSC}] (dso) {};
+  \node[esa, below=0.80cm of dso, label=below:{\footnotesize ESA}] (esa) {};
+
+  % Optical connections (blue, automatically placed behind component nodes)
+  \draw[opt, ->-] (ld.E0) -- (pc.W0);
+  \draw[opt, ->-] (pc.E0) -- (mzm.W0);
+  \draw[opt] (mzm.E0) -- (tap1.W0);
+  \draw[opt] (tap1.E0) -- (smf.W0);
+  \draw[opt->] (tap1.N0) -- (osa.S0);
+  \draw[opt, ->-] (smf.E0) -- (edfa.W0);
+  \draw[opt, ->-] (edfa.E0) -- (obpf.W0);
+  \draw[opt, ->-] (obpf.E0) -- (voa.W0);
+  \draw[opt] (voa.E0) -- (tap2.W0);
+  \draw[opt->] (tap2.S0) -- (mpd.N0);
+  \draw[opt, ->-] (tap2.E0) -- (pd.W0);
+
+  % RF connections (red)
+  \draw[rf, ->-] (pd.E0) -- (elpf.W0);
+  \draw[rf->] (elpf.E0) -- (dso.W0);
+  \draw[rf->, bend=0.18cm] ($(elpf.E0)!0.42!(dso.W0)$) |- (esa.W0);
+\end{tikzpicture}
+\end{center}
+
+\vspace{0.2cm}
+\subsection{Setup 2: Coherent Optical DP-QAM Transceiver with \texorpdfstring{$90^\circ$}{90-degree} Hybrid \& Balanced Detection}
+\begin{center}
+\begin{tikzpicture}[commtikz unit=0.76cm]
+  % Transmitter
+  \node[ld, label=above:{\footnotesize Tx ECL}] (txld) at (0, 0) {};
+  \node[iqm, right=0.85cm of txld, numN=2, label=below:{\footnotesize IQM}] (iqm) {};
+  \node[awg, above=1.05cm of iqm, numS=2, label=above:{\footnotesize AWG}] (txawg) {};
+  \draw[rf->] (txawg.S0) -- node[left, font=\scriptsize, text=RFcol] {I} (iqm.N0);
+  \draw[rf->] (txawg.S1) -- node[right, font=\scriptsize, text=RFcol] {Q} (iqm.N1);
+
+  % Channel
+  \node[fiberspool, right=0.85cm of iqm, label=above:{\footnotesize SSMF}] (chfiber) {};
+  \node[edfa, right=0.75cm of chfiber, label=above:{\footnotesize EDFA}] (chedfa) {};
+  \node[bpf, right=0.75cm of chedfa, label=above:{\footnotesize OBPF}] (chbpf) {};
+
+  % Coherent Receiver
+  \node[hybrid90, right=1.1cm of chbpf.E0, anchor=sig, label=above:{\footnotesize $90^\circ$ Hybrid}] (hyb) {};
+  \node[ld, below=0.70cm of chfiber, label=below:{\footnotesize LO Laser}] (lold) {};
+  \node[polctrl, right=0.65cm of lold, label=below:{\scriptsize PC}] (lopc) {};
+
+  % Balanced Photodetectors and ADCs
+  \node[bpd, right=1.0cm of hyb, yshift=0.75cm, label=above:{\footnotesize BPD-I}] (bpdi) {};
+  \node[bpd, right=1.0cm of hyb, yshift=-0.75cm, label=below:{\footnotesize BPD-Q}] (bpdq) {};
+  \node[adc, right=0.75cm of bpdi, label=above:{\scriptsize ADC}] (adci) {};
+  \node[adc, right=0.75cm of bpdq, label=below:{\scriptsize ADC}] (adcq) {};
+  \node[commrect, width=1.2, height=2.2, numW=2, right=0.90cm of $(adci.east)!0.5!(adcq.east)$, label=above:{\footnotesize DSP}] (rx) {};
+
+  % Optical links
+  \draw[opt, ->-] (txld.E0) -- (iqm.W0);
+  \draw[opt, ->-] (iqm.E0) -- (chfiber.W0);
+  \draw[opt, ->-] (chfiber.E0) -- (chedfa.W0);
+  \draw[opt, ->-] (chedfa.E0) -- (chbpf.W0);
+  \draw[opt, ->-] (chbpf.E0) -- (hyb.sig);
+  \draw[opt, ->-] (lold.E0) -- (lopc.W0);
+  \draw[opt, ->-] (lopc.E0) to[arcz] (hyb.lo);
+
+  % Hybrid to BPDs
+  \draw[opt] (hyb.I+) to[arcz] (bpdi.W0);
+  \draw[opt] (hyb.I-) to[arcz] (bpdi.W1);
+  \draw[opt] (hyb.Q+) to[arcz] (bpdq.W0);
+  \draw[opt] (hyb.Q-) to[arcz] (bpdq.W1);
+
+  % RF / Digital links
+  \draw[rf, ->-] (bpdi.E0) -- (adci.W0);
+  \draw[rf, ->-] (bpdq.E0) -- (adcq.W0);
+  \draw[optrf->] (adci.E0) to[arcz] (rx.W0);
+  \draw[optrf->] (adcq.E0) to[arcz] (rx.W1);
+\end{tikzpicture}
+\end{center}
+
+\vspace{0.2cm}
+\subsection{Setup 3: Photodiode TIA Front-End Circuit \& WDM FBG Interrogation}
+\begin{center}
+\begin{tikzpicture}[commtikz unit=0.80cm]
+  % Left: Photodiode + TIA + AC Coupling Circuit
+  \node[opamp, label=below:{\footnotesize TIA}] (tia) at (2.2, 0) {};
+  \node[edot] (nin) at ([xshift=-0.85cm]tia.in-) {};
+  \node[edot] (nout) at ([xshift=0.75cm]tia.out) {};
+
+  % Reverse-biased circuit photodiode connected to inverting input
+  \draw[commtikz line] (nin) -- (tia.in-);
+  \node[elpd, rotate=90, transform shape] (cpd) at ([yshift=-0.65cm]nin) {};
+  \node[left=4pt of cpd.center, font=\scriptsize] {PD};
+  \draw[commtikz line] (nin) -- (cpd.east);
+  \node[ground] at ([yshift=-0.35cm]cpd.west) (g1) {};
+  \draw[commtikz line] (cpd.west) -- (g1.north);
+
+  % Non-inverting input grounded
+  \node[ground] at ([xshift=-0.35cm, yshift=-0.45cm]tia.in+) (g2) {};
+  \draw[commtikz line] (tia.in+) -| (g2.north);
+
+  % Feedback resistor R_F across TIA
+  \draw[commtikz line] (nin) -- ++(0, 1.05cm) to[to R={label=above:{\scriptsize $R_F$}}] ([yshift=1.05cm]nout |- nin) -- (nout);
+
+  % Output AC coupling capacitor & load resistor
+  \draw[rf] (tia.out) -- (nout) to[to C={label=above:{\scriptsize $C_c$}}] ++(1.9cm, 0) coordinate (vout);
+  \node[osc, right=0.45cm of vout, label=above:{\footnotesize OSC}] (osc1) {};
+  \draw[rf->] (vout) -- (osc1.W0);
+
+  % Right: WDM FBG Interrogation Loop
+  \begin{scope}[xshift=8.2cm]
+    \node[ld, label=above:{\footnotesize $\lambda_1$}] (ld1) at (0, 0.55) {};
+    \node[ld, label=below:{\footnotesize $\lambda_2$}] (ld2) at (0, -0.55) {};
+    \node[mux, numW=2, numE=1, right=0.95cm of $(ld1.east)!0.5!(ld2.east)$, label={[yshift=3pt]above:{\footnotesize MUX}}] (mux) {};
+    \node[circulator, right=0.85cm of mux] (circ) {};
+    \node[fbg, right=0.85cm of circ, label=above:{\footnotesize FBG}] (fbg) {};
+    \node[isolator, right=0.80cm of fbg] (iso) {};
+    \node[termination, right=0.65cm of iso] (term) {};
+    \node[osa, below=0.85cm of circ, xshift=1.5cm, label=right:{\footnotesize OSA}] (osa) {};
+
+    \draw[opt, ->-] (ld1.E0) to[arcz] (mux.W0);
+    \draw[opt, ->-] (ld2.E0) to[arcz] (mux.W1);
+    \draw[opt, ->-] (mux.E0) -- (circ.1);
+    \draw[opt, ->-] (circ.2) -- (fbg.W0);
+    \draw[opt, ->-] (fbg.E0) -- (iso.W0);
+    \draw[opt] (iso.E0) -- (term.in);
+    \draw[opt bend=0.22cm, ->-=0.78] (circ.3) |- (osa.W0);
+  \end{scope}
+\end{tikzpicture}
+\end{center}
+
+\end{document}

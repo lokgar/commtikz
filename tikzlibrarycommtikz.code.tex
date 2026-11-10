@@ -1,0 +1,37 @@
+%% tikzlibrarycommtikz.code.tex
+%% Main entry point for \usetikzlibrary{commtikz}
+\makeatletter
+
+\def\commtikzversion{0.1.0}
+\def\commtikzversiondate{2026/11/10}
+
+% Required standard TikZ libraries
+\usetikzlibrary{
+  calc,
+  positioning,
+  arrows.meta,
+  decorations.markings,
+  decorations.pathmorphing,
+  shapes.geometric,
+  fit,
+  backgrounds,
+  chains
+}
+
+% Standard signal domain colors
+\definecolor{OPTcol}{HTML}{1F77B4}
+\definecolor{RFcol}{HTML}{D62728}
+\definecolor{OPTRFcol}{HTML}{9467BD}
+\definecolor{DCcol}{HTML}{2CA02C}
+\definecolor{CTRLcol}{HTML}{7F7F7F}
+
+% Load modular sub-libraries
+\input{tikzlibrarycommtikz.base.code.tex}
+\input{tikzlibrarycommtikz.optical.code.tex}
+\input{tikzlibrarycommtikz.instruments.code.tex}
+\input{tikzlibrarycommtikz.rf.code.tex}
+\input{tikzlibrarycommtikz.paths.code.tex}
+\input{tikzlibrarycommtikz.electrical.code.tex}
+
+\makeatother
+\endinput

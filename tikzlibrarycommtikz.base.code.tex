@@ -1,0 +1,597 @@
+%% tikzlibrarycommtikz.base.code.tex
+%% Core keys, PGF drawing helpers, multi-port anchor engine, and generic block shapes.
+
+% ==============================================================================
+% 1. Key Definitions (/tikz/commtikz and /tikz forwarding keys)
+% ==============================================================================
+\pgfkeys{
+  /tikz/commtikz/.is family,
+  /tikz/commtikz/.cd,
+  unit/.initial=1cm,
+  width/.initial=1,
+  height/.initial=1,
+  height1/.initial=2.2,
+  height2/.initial=1.0,
+  radius/.initial=0.5,
+  bend radius/.initial=1.0,
+  numN/.initial=1,
+  numS/.initial=1,
+  numE/.initial=1,
+  numW/.initial=1,
+  port span x/.initial={},
+  port span y/.initial={},
+  port order/.initial=1, % 1 = top-to-bottom (default), -1 = bottom-to-top
+  line width/.initial=0.6pt,
+  inner line width/.initial=0.45pt,
+  signal line width/.initial=0.6pt,
+  fill/.initial=white,
+  comp label/.initial={},
+  sublabel I/.initial={I},
+  sublabel Q/.initial={Q},
+  response/.initial={},
+  tuneup/.initial=1,
+  flip/.initial=0,
+  ccw/.initial=0,
+  electrodes/.initial=0,
+  add drop/.initial=0,
+  show phase/.initial=0,
+  boxed/.initial=0,
+  tunable/.initial=0,
+  sector N/.initial={},
+  sector S/.initial={},
+  sector E/.initial={},
+  sector W/.initial={},
+  % Port count group helper: ports={W=2, E=4, N=1, S=1}
+  ports/.is family,
+  ports/N/.style={/tikz/commtikz/numN=#1},
+  ports/S/.style={/tikz/commtikz/numS=#1},
+  ports/E/.style={/tikz/commtikz/numE=#1},
+  ports/W/.style={/tikz/commtikz/numW=#1},
+}
+
+% Top-level /tikz convenience keys so users can pass them directly on nodes
+\tikzset{
+  commtikz unit/.style={/tikz/commtikz/unit=#1},
+  commtikz scale/.style={/tikz/commtikz/unit=\the\dimexpr#1\dimexpr1cm\relax\relax},
+  commtikz line width/.style={
+    /tikz/commtikz/line width=#1,
+    /tikz/commtikz/signal line width=#1,
+    /tikz/commtikz/inner line width/.expanded={\the\dimexpr0.75\dimexpr#1\relax\relax}
+  },
+  commtikz block line width/.style={/tikz/commtikz/line width=#1},
+  commtikz inner line width/.style={/tikz/commtikz/inner line width=#1},
+  commtikz signal line width/.style={/tikz/commtikz/signal line width=#1},
+  commtikz match font/.style={commtikz line width=0.055em},
+  width/.style={/tikz/commtikz/width=#1},
+  height/.style={/tikz/commtikz/height=#1},
+  height1/.style={/tikz/commtikz/height1=#1},
+  height2/.style={/tikz/commtikz/height2=#1},
+  block width/.style={/tikz/commtikz/width=#1},
+  block height/.style={/tikz/commtikz/height=#1},
+  comp radius/.style={/tikz/commtikz/radius=#1},
+  bend radius/.style={/tikz/commtikz/bend radius=#1},
+  numN/.style={/tikz/commtikz/numN=#1},
+  numS/.style={/tikz/commtikz/numS=#1},
+  numE/.style={/tikz/commtikz/numE=#1},
+  numW/.style={/tikz/commtikz/numW=#1},
+  port span x/.style={/tikz/commtikz/port span x={#1}},
+  port span y/.style={/tikz/commtikz/port span y={#1}},
+  port span/.style={/tikz/commtikz/port span x={#1}, /tikz/commtikz/port span y={#1}},
+  ports/.style={/tikz/commtikz/ports/.cd,#1,/tikz/.cd},
+  port order/.is choice,
+  port order/top to bottom/.style={/tikz/commtikz/port order=1},
+  port order/bottom to top/.style={/tikz/commtikz/port order=-1},
+  fillcol/.style={fill=#1,/tikz/commtikz/fill=#1},
+  comp label/.style={/tikz/commtikz/comp label={#1}},
+  sublabel I/.style={/tikz/commtikz/sublabel I={#1}},
+  sublabel Q/.style={/tikz/commtikz/sublabel Q={#1}},
+  response/.style={/tikz/commtikz/response={#1}},
+  tuneup/.is choice,
+  tuneup/true/.style={/tikz/commtikz/tuneup=1},
+  tuneup/false/.style={/tikz/commtikz/tuneup=0},
+  tuneup/.default=true,
+  mirror flip/.is choice,
+  mirror flip/true/.style={/tikz/commtikz/flip=1},
+  mirror flip/false/.style={/tikz/commtikz/flip=0},
+  mirror flip/.default=true,
+  mux flip/.is choice,
+  mux flip/true/.style={/tikz/commtikz/flip=1},
+  mux flip/false/.style={/tikz/commtikz/flip=0},
+  mux flip/.default=true,
+  bs flip/.is choice,
+  bs flip/true/.style={/tikz/commtikz/flip=1},
+  bs flip/false/.style={/tikz/commtikz/flip=0},
+  bs flip/.default=true,
+  ccw/.is choice,
+  ccw/true/.style={/tikz/commtikz/ccw=1},
+  ccw/false/.style={/tikz/commtikz/ccw=0},
+  ccw/.default=true,
+  electrodes/.is choice,
+  electrodes/true/.style={/tikz/commtikz/electrodes=1},
+  electrodes/false/.style={/tikz/commtikz/electrodes=0},
+  electrodes/.default=true,
+  add drop/.is choice,
+  add drop/true/.style={/tikz/commtikz/add drop=1},
+  add drop/false/.style={/tikz/commtikz/add drop=0},
+  add drop/.default=true,
+  show phase/.is choice,
+  show phase/true/.style={/tikz/commtikz/show phase=1},
+  show phase/false/.style={/tikz/commtikz/show phase=0},
+  show phase/.default=true,
+  boxed/.is choice,
+  boxed/true/.style={/tikz/commtikz/boxed=1},
+  boxed/false/.style={/tikz/commtikz/boxed=0},
+  boxed/.default=true,
+  tunable/.is choice,
+  tunable/true/.style={/tikz/commtikz/tunable=1},
+  tunable/false/.style={/tikz/commtikz/tunable=0},
+  tunable/.default=true,
+  sector N/.style={/tikz/commtikz/sector N={#1}},
+  sector S/.style={/tikz/commtikz/sector S={#1}},
+  sector E/.style={/tikz/commtikz/sector E={#1}},
+  sector W/.style={/tikz/commtikz/sector W={#1}},
+  % Base visual style applied to all commtikz block nodes
+  commtikz base node/.style={
+    draw,
+    fill=\pgfkeysvalueof{/tikz/commtikz/fill},
+    line width=\pgfkeysvalueof{/tikz/commtikz/line width},
+    line cap=butt,
+    line join=miter,
+    inner sep=0pt,
+    outer sep=0pt,
+  },
+  commtikz bare node/.style={
+    draw,
+    line width=\pgfkeysvalueof{/tikz/commtikz/line width},
+    line cap=butt,
+    line join=miter,
+    inner sep=0pt,
+    outer sep=0pt,
+  },
+}
+
+% ==============================================================================
+% 2. Low-level PGF Helper Macros and Dimension Registers for Shapes
+% ==============================================================================
+\newdimen\commtikz@u
+\newdimen\commtikz@hw
+\newdimen\commtikz@hh
+\newdimen\commtikz@phw
+\newdimen\commtikz@phh
+\newdimen\commtikz@hha
+\newdimen\commtikz@hhb
+\newdimen\commtikz@hhW
+\newdimen\commtikz@hhE
+\newdimen\commtikz@r
+\newdimen\commtikz@rk
+\newdimen\commtikz@br
+\newdimen\commtikz@bdx
+\newdimen\commtikz@bdy
+\newdimen\commtikz@ndx
+\newdimen\commtikz@ndy
+\newdimen\commtikz@fr
+\newdimen\commtikz@fy
+\newdimen\commtikz@fdx
+\newdimen\commtikz@pcr
+\newdimen\commtikz@pcy
+\newdimen\commtikz@pcdx
+\newdimen\commtikz@voar
+\newdimen\commtikz@xa
+\newdimen\commtikz@xb
+\newdimen\commtikz@xc
+\newdimen\commtikz@xd
+\newdimen\commtikz@xe
+\newdimen\commtikz@xf
+\newdimen\commtikz@ya
+\newdimen\commtikz@xO
+\newdimen\commtikz@xA
+\newdimen\commtikz@xB
+\newdimen\commtikz@xC
+\newdimen\commtikz@xD
+\newdimen\commtikz@yM
+\newdimen\commtikz@yH
+\newdimen\commtikz@yL
+\newdimen\commtikz@fbggh
+\newdimen\commtikz@gx
+\newdimen\commtikz@ar
+\newdimen\commtikz@rr
+\newdimen\commtikz@rx
+\newdimen\commtikz@ry
+\newdimen\commtikz@sy
+\newdimen\commtikz@arr@xa
+\newdimen\commtikz@arr@ya
+\newdimen\commtikz@arr@xb
+\newdimen\commtikz@arr@yb
+\newdimen\commtikz@arr@hl
+\newdimen\commtikz@arr@hw
+
+% Use current stroke color as fill color inside a \pgfscope
+\def\commtikz@use@strokecolor@as@fill{%
+  \ifx\tikz@strokecolor\pgfutil@empty
+    \pgfsetfillcolor{.}%
+  \else
+    \pgfsetfillcolor{\tikz@strokecolor}%
+  \fi
+}
+
+% Set both PDF fill color and LaTeX text color for internal shape labels
+\def\commtikz@set@labelcolor{%
+  \ifx\tikz@textcolor\pgfutil@empty
+    \ifx\tikz@strokecolor\pgfutil@empty
+      \pgfsetfillcolor{.}\color{.}%
+    \else
+      \pgfsetfillcolor{\tikz@strokecolor}\color{\tikz@strokecolor}%
+    \fi
+  \else
+    \pgfsetfillcolor{\tikz@textcolor}\color{\tikz@textcolor}%
+  \fi
+}
+
+% Draw a line from (#1,#2) to (#3,#4) with a sharp filled triangle arrowhead
+% #1=x1, #2=y1, #3=x2, #4=y2, #5=head_length, #6=head_width
+\def\commtikz@drawarrow#1#2#3#4#5#6{%
+  \pgfscope
+    \commtikz@arr@xa=\dimexpr#1\relax
+    \commtikz@arr@ya=\dimexpr#2\relax
+    \commtikz@arr@xb=\dimexpr#3\relax
+    \commtikz@arr@yb=\dimexpr#4\relax
+    \commtikz@arr@hl=\dimexpr#5\relax
+    \commtikz@arr@hw=\dimexpr#6\relax
+    \pgfpointnormalised{\pgfpoint{\dimexpr\commtikz@arr@xb-\commtikz@arr@xa\relax}{\dimexpr\commtikz@arr@yb-\commtikz@arr@ya\relax}}%
+    \edef\commtikz@ux{\pgf@sys@tonumber{\pgf@x}}%
+    \edef\commtikz@uy{\pgf@sys@tonumber{\pgf@y}}%
+    \commtikz@bdx=\commtikz@ux\commtikz@arr@hl\relax
+    \commtikz@bdy=\commtikz@uy\commtikz@arr@hl\relax
+    \commtikz@ndx=-0.5\dimexpr\commtikz@uy\commtikz@arr@hw\relax
+    \commtikz@ndy=0.5\dimexpr\commtikz@ux\commtikz@arr@hw\relax
+    \pgfpathmoveto{\pgfpoint{\commtikz@arr@xa}{\commtikz@arr@ya}}%
+    \pgfpathlineto{\pgfpoint{\dimexpr\commtikz@arr@xb - 0.65\commtikz@bdx\relax}{\dimexpr\commtikz@arr@yb - 0.65\commtikz@bdy\relax}}%
+    \pgfusepath{stroke}%
+    \commtikz@use@strokecolor@as@fill
+    \pgfpathmoveto{\pgfpoint{\commtikz@arr@xb}{\commtikz@arr@yb}}%
+    \pgfpathlineto{\pgfpoint{\dimexpr\commtikz@arr@xb - \commtikz@bdx + \commtikz@ndx\relax}{\dimexpr\commtikz@arr@yb - \commtikz@bdy + \commtikz@ndy\relax}}%
+    \pgfpathlineto{\pgfpoint{\dimexpr\commtikz@arr@xb - \commtikz@bdx - \commtikz@ndx\relax}{\dimexpr\commtikz@arr@yb - \commtikz@bdy - \commtikz@ndy\relax}}%
+    \pgfpathclose
+    \pgfusepath{fill}%
+  \endpgfscope
+}
+
+% Draw default component label at (#1,#2) if node text box is empty
+\def\commtikz@drawcomplabel#1#2{%
+  \ifdim\wd\pgfnodeparttextbox=0pt\relax
+    \pgfkeysgetvalue{/tikz/commtikz/comp label}{\commtikz@lbl}%
+    \ifx\commtikz@lbl\pgfutil@empty\else
+      \pgfscope
+        \commtikz@set@labelcolor
+        \pgftext[at=\pgfpoint{#1}{#2}]{\commtikz@set@labelcolor\tikz@textfont\commtikz@lbl}%
+      \endpgfscope
+    \fi
+  \fi
+}
+
+% Generate N0..N15, S0..S15, E0..E15, W0..W15 and 1-based north/south/east/west aliases
+\def\commtikz@defrectportanchors{%
+  \pgfutil@for\commtikz@idx:=0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15\do{%
+    \expandafter\commtikz@defrectportanchor@i\expandafter{\commtikz@idx}%
+  }%
+}
+
+\def\commtikz@defrectportanchor@i#1{%
+  \anchor{N#1}{%
+    \commtikz@rectparams
+    \pgfmathsetlength\pgf@x{-\commtikz@phw + (#1 + 1) * (2 * \commtikz@phw) / (\commtikz@numN + 1)}%
+    \pgf@y=\commtikz@hh\relax
+  }%
+  \anchor{S#1}{%
+    \commtikz@rectparams
+    \pgfmathsetlength\pgf@x{-\commtikz@phw + (#1 + 1) * (2 * \commtikz@phw) / (\commtikz@numS + 1)}%
+    \pgf@y=-\commtikz@hh\relax
+  }%
+  \anchor{E#1}{%
+    \commtikz@rectparams
+    \pgf@x=\commtikz@hw\relax
+    \pgfmathsetlength\pgf@y{\commtikz@portorder * (\commtikz@phh - (#1 + 1) * (2 * \commtikz@phh) / (\commtikz@numE + 1))}%
+  }%
+  \anchor{W#1}{%
+    \commtikz@rectparams
+    \pgf@x=-\commtikz@hw\relax
+    \pgfmathsetlength\pgf@y{\commtikz@portorder * (\commtikz@phh - (#1 + 1) * (2 * \commtikz@phh) / (\commtikz@numW + 1))}%
+  }%
+}
+
+% Inherit all rectangular anchors from #1 (usually commrect)
+\def\commtikz@inheritrectanchors#1{%
+  \inheritsavedanchors[from=#1]%
+  \inheritanchorborder[from=#1]%
+  \inheritanchor[from=#1]{center}%
+  \inheritanchor[from=#1]{mid}%
+  \inheritanchor[from=#1]{base}%
+  \inheritanchor[from=#1]{north}%
+  \inheritanchor[from=#1]{south}%
+  \inheritanchor[from=#1]{east}%
+  \inheritanchor[from=#1]{west}%
+  \inheritanchor[from=#1]{north east}%
+  \inheritanchor[from=#1]{north west}%
+  \inheritanchor[from=#1]{south east}%
+  \inheritanchor[from=#1]{south west}%
+  \inheritanchor[from=#1]{N}%
+  \inheritanchor[from=#1]{S}%
+  \inheritanchor[from=#1]{E}%
+  \inheritanchor[from=#1]{W}%
+  \inheritanchor[from=#1]{NE}%
+  \inheritanchor[from=#1]{NW}%
+  \inheritanchor[from=#1]{SE}%
+  \inheritanchor[from=#1]{SW}%
+  \inheritanchor[from=#1]{in}%
+  \inheritanchor[from=#1]{out}%
+  \inheritanchor[from=#1]{input}%
+  \inheritanchor[from=#1]{output}%
+  \pgfutil@for\commtikz@idx:=0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15\do{%
+    \expandafter\commtikz@inheritport@i\expandafter{\commtikz@idx}{#1}%
+  }%
+}
+
+\def\commtikz@inheritport@i#1#2{%
+  \inheritanchor[from=#2]{N#1}%
+  \inheritanchor[from=#2]{S#1}%
+  \inheritanchor[from=#2]{E#1}%
+  \inheritanchor[from=#2]{W#1}%
+}
+
+% ==============================================================================
+% 3. Base Shape: commrect
+% ==============================================================================
+\def\commtikz@rectparams{%
+  \commtikz@savedrect
+  \commtikz@u=\commtikz@saved@u\relax
+  \commtikz@hw=\commtikz@saved@hw\relax
+  \commtikz@hh=\commtikz@saved@hh\relax
+  \commtikz@phw=\commtikz@saved@phw\relax
+  \commtikz@phh=\commtikz@saved@phh\relax
+}
+
+\pgfdeclareshape{commrect}{
+  \savedmacro\commtikz@savedrect{%
+    \pgfmathsetlength\commtikz@u{\pgfkeysvalueof{/tikz/commtikz/unit}}%
+    \pgfmathparse{\pgfkeysvalueof{/tikz/commtikz/width}}%
+    \ifpgfmathunitsdeclared
+      \commtikz@hw=0.5\dimexpr\pgfmathresult pt\relax
+    \else
+      \commtikz@hw=0.5\dimexpr\pgfmathresult\commtikz@u\relax
+    \fi
+    \pgfmathparse{\pgfkeysvalueof{/tikz/commtikz/height}}%
+    \ifpgfmathunitsdeclared
+      \commtikz@hh=0.5\dimexpr\pgfmathresult pt\relax
+    \else
+      \commtikz@hh=0.5\dimexpr\pgfmathresult\commtikz@u\relax
+    \fi
+    \pgfkeysgetvalue{/tikz/commtikz/port span x}{\commtikz@psx}%
+    \ifx\commtikz@psx\pgfutil@empty
+      \commtikz@phw=\commtikz@hw\relax
+    \else
+      \pgfmathparse{\commtikz@psx}%
+      \ifpgfmathunitsdeclared
+        \commtikz@phw=0.5\dimexpr\pgfmathresult pt\relax
+      \else
+        \commtikz@phw=0.5\dimexpr\pgfmathresult\commtikz@u\relax
+      \fi
+    \fi
+    \pgfkeysgetvalue{/tikz/commtikz/port span y}{\commtikz@psy}%
+    \ifx\commtikz@psy\pgfutil@empty
+      \commtikz@phh=\commtikz@hh\relax
+    \else
+      \pgfmathparse{\commtikz@psy}%
+      \ifpgfmathunitsdeclared
+        \commtikz@phh=0.5\dimexpr\pgfmathresult pt\relax
+      \else
+        \commtikz@phh=0.5\dimexpr\pgfmathresult\commtikz@u\relax
+      \fi
+    \fi
+    \edef\commtikz@saved@u{\the\commtikz@u}%
+    \edef\commtikz@saved@hw{\the\commtikz@hw}%
+    \edef\commtikz@saved@hh{\the\commtikz@hh}%
+    \edef\commtikz@saved@phw{\the\commtikz@phw}%
+    \edef\commtikz@saved@phh{\the\commtikz@phh}%
+    \edef\commtikz@numN{\pgfkeysvalueof{/tikz/commtikz/numN}}%
+    \edef\commtikz@numS{\pgfkeysvalueof{/tikz/commtikz/numS}}%
+    \edef\commtikz@numE{\pgfkeysvalueof{/tikz/commtikz/numE}}%
+    \edef\commtikz@numW{\pgfkeysvalueof{/tikz/commtikz/numW}}%
+    \edef\commtikz@portorder{\pgfkeysvalueof{/tikz/commtikz/port order}}%
+    \addtosavedmacro\commtikz@saved@u
+    \addtosavedmacro\commtikz@saved@hw
+    \addtosavedmacro\commtikz@saved@hh
+    \addtosavedmacro\commtikz@saved@phw
+    \addtosavedmacro\commtikz@saved@phh
+    \addtosavedmacro\commtikz@numN
+    \addtosavedmacro\commtikz@numS
+    \addtosavedmacro\commtikz@numE
+    \addtosavedmacro\commtikz@numW
+    \addtosavedmacro\commtikz@portorder
+  }
+
+  \savedanchor\centerpoint{\pgfpointorigin}
+  \savedanchor\textpoint{%
+    \pgf@x=-0.5\wd\pgfnodeparttextbox\relax
+    \pgf@y=-0.5\ht\pgfnodeparttextbox\relax
+    \advance\pgf@y by 0.5\dp\pgfnodeparttextbox\relax
+  }
+
+  \anchor{center}{\centerpoint}
+  \anchor{text}{\textpoint}
+  \anchor{mid}{\pgfpoint{0pt}{0pt}}
+  \anchor{base}{\pgfpoint{0pt}{-0.5\ht\pgfnodeparttextbox}}
+
+  \anchor{north}{\commtikz@rectparams\pgfpoint{0pt}{\commtikz@hh}}
+  \anchor{south}{\commtikz@rectparams\pgfpoint{0pt}{-\commtikz@hh}}
+  \anchor{east}{\commtikz@rectparams\pgfpoint{\commtikz@hw}{0pt}}
+  \anchor{west}{\commtikz@rectparams\pgfpoint{-\commtikz@hw}{0pt}}
+  \anchor{north east}{\commtikz@rectparams\pgfpoint{\commtikz@hw}{\commtikz@hh}}
+  \anchor{north west}{\commtikz@rectparams\pgfpoint{-\commtikz@hw}{\commtikz@hh}}
+  \anchor{south east}{\commtikz@rectparams\pgfpoint{\commtikz@hw}{-\commtikz@hh}}
+  \anchor{south west}{\commtikz@rectparams\pgfpoint{-\commtikz@hw}{-\commtikz@hh}}
+
+  % Short compass aliases
+  \anchor{N}{\commtikz@rectparams\pgfpoint{0pt}{\commtikz@hh}}
+  \anchor{S}{\commtikz@rectparams\pgfpoint{0pt}{-\commtikz@hh}}
+  \anchor{E}{\commtikz@rectparams\pgfpoint{\commtikz@hw}{0pt}}
+  \anchor{W}{\commtikz@rectparams\pgfpoint{-\commtikz@hw}{0pt}}
+  \anchor{NE}{\commtikz@rectparams\pgfpoint{\commtikz@hw}{\commtikz@hh}}
+  \anchor{NW}{\commtikz@rectparams\pgfpoint{-\commtikz@hw}{\commtikz@hh}}
+  \anchor{SE}{\commtikz@rectparams\pgfpoint{\commtikz@hw}{-\commtikz@hh}}
+  \anchor{SW}{\commtikz@rectparams\pgfpoint{-\commtikz@hw}{-\commtikz@hh}}
+  \anchor{in}{\commtikz@rectparams\pgfpoint{-\commtikz@hw}{0pt}}
+  \anchor{out}{\commtikz@rectparams\pgfpoint{\commtikz@hw}{0pt}}
+  \anchor{input}{\commtikz@rectparams\pgfpoint{-\commtikz@hw}{0pt}}
+  \anchor{output}{\commtikz@rectparams\pgfpoint{\commtikz@hw}{0pt}}
+
+  % Dynamic multi-port anchors N0..N15, S0..S15, E0..E15, W0..W15
+  \commtikz@defrectportanchors
+
+  \anchorborder{%
+    \pgf@xa=\pgf@x\relax
+    \pgf@ya=\pgf@y\relax
+    \commtikz@rectparams
+    \pgfpointborderrectangle{\pgfpoint{\pgf@xa}{\pgf@ya}}{\pgfpoint{\commtikz@hw}{\commtikz@hh}}%
+  }
+
+  \backgroundpath{%
+    \commtikz@rectparams
+    \pgfpathrectanglecorners{\pgfpoint{-\commtikz@hw}{-\commtikz@hh}}{\pgfpoint{\commtikz@hw}{\commtikz@hh}}%
+  }
+
+  \beforebackgroundpath{%
+    \commtikz@rectparams
+    \commtikz@drawcomplabel{0pt}{0pt}%
+  }
+}
+
+% ==============================================================================
+% 4. Base Shape: commcircle
+% ==============================================================================
+\def\commtikz@circparams{%
+  \commtikz@savedcirc
+  \commtikz@u=\commtikz@saved@u\relax
+  \commtikz@r=\commtikz@saved@r\relax
+  \commtikz@rk=\commtikz@saved@rk\relax
+}
+
+\pgfdeclareshape{commcircle}{
+  \savedmacro\commtikz@savedcirc{%
+    \pgfmathsetlength\commtikz@u{\pgfkeysvalueof{/tikz/commtikz/unit}}%
+    \pgfmathparse{\pgfkeysvalueof{/tikz/commtikz/radius}}%
+    \ifpgfmathunitsdeclared
+      \commtikz@r=\pgfmathresult pt\relax
+    \else
+      \commtikz@r=\pgfmathresult\commtikz@u\relax
+    \fi
+    \commtikz@rk=0.70710678\commtikz@r\relax
+    \edef\commtikz@saved@u{\the\commtikz@u}%
+    \edef\commtikz@saved@r{\the\commtikz@r}%
+    \edef\commtikz@saved@rk{\the\commtikz@rk}%
+    \addtosavedmacro\commtikz@saved@u
+    \addtosavedmacro\commtikz@saved@r
+    \addtosavedmacro\commtikz@saved@rk
+  }
+
+  \savedanchor\centerpoint{\pgfpointorigin}
+  \savedanchor\textpoint{%
+    \pgf@x=-0.5\wd\pgfnodeparttextbox\relax
+    \pgf@y=-0.5\ht\pgfnodeparttextbox\relax
+    \advance\pgf@y by 0.5\dp\pgfnodeparttextbox\relax
+  }
+
+  \anchor{center}{\centerpoint}
+  \anchor{text}{\textpoint}
+  \anchor{mid}{\pgfpoint{0pt}{0pt}}
+  \anchor{base}{\pgfpoint{0pt}{-0.5\ht\pgfnodeparttextbox}}
+
+  \anchor{north}{\commtikz@circparams\pgfpoint{0pt}{\commtikz@r}}
+  \anchor{south}{\commtikz@circparams\pgfpoint{0pt}{-\commtikz@r}}
+  \anchor{east}{\commtikz@circparams\pgfpoint{\commtikz@r}{0pt}}
+  \anchor{west}{\commtikz@circparams\pgfpoint{-\commtikz@r}{0pt}}
+  \anchor{north east}{\commtikz@circparams\pgfpoint{\commtikz@rk}{\commtikz@rk}}
+  \anchor{north west}{\commtikz@circparams\pgfpoint{-\commtikz@rk}{\commtikz@rk}}
+  \anchor{south east}{\commtikz@circparams\pgfpoint{\commtikz@rk}{-\commtikz@rk}}
+  \anchor{south west}{\commtikz@circparams\pgfpoint{-\commtikz@rk}{-\commtikz@rk}}
+
+  % Aliases
+  \anchor{N}{\commtikz@circparams\pgfpoint{0pt}{\commtikz@r}}
+  \anchor{S}{\commtikz@circparams\pgfpoint{0pt}{-\commtikz@r}}
+  \anchor{E}{\commtikz@circparams\pgfpoint{\commtikz@r}{0pt}}
+  \anchor{W}{\commtikz@circparams\pgfpoint{-\commtikz@r}{0pt}}
+  \anchor{N0}{\commtikz@circparams\pgfpoint{0pt}{\commtikz@r}}
+  \anchor{S0}{\commtikz@circparams\pgfpoint{0pt}{-\commtikz@r}}
+  \anchor{E0}{\commtikz@circparams\pgfpoint{\commtikz@r}{0pt}}
+  \anchor{W0}{\commtikz@circparams\pgfpoint{-\commtikz@r}{0pt}}
+  \anchor{NE}{\commtikz@circparams\pgfpoint{\commtikz@rk}{\commtikz@rk}}
+  \anchor{NW}{\commtikz@circparams\pgfpoint{-\commtikz@rk}{\commtikz@rk}}
+  \anchor{SE}{\commtikz@circparams\pgfpoint{\commtikz@rk}{-\commtikz@rk}}
+  \anchor{SW}{\commtikz@circparams\pgfpoint{-\commtikz@rk}{-\commtikz@rk}}
+  \anchor{in}{\commtikz@circparams\pgfpoint{-\commtikz@r}{0pt}}
+  \anchor{out}{\commtikz@circparams\pgfpoint{\commtikz@r}{0pt}}
+  \anchor{input}{\commtikz@circparams\pgfpoint{-\commtikz@r}{0pt}}
+  \anchor{output}{\commtikz@circparams\pgfpoint{\commtikz@r}{0pt}}
+
+  \anchorborder{%
+    \pgf@xa=\pgf@x\relax
+    \pgf@ya=\pgf@y\relax
+    \commtikz@circparams
+    \pgfpointborderellipse{\pgfpoint{\pgf@xa}{\pgf@ya}}{\pgfpoint{\commtikz@r}{\commtikz@r}}%
+  }
+
+  \backgroundpath{%
+    \commtikz@circparams
+    \pgfpathcircle{\pgfpointorigin}{\commtikz@r}%
+  }
+
+  \beforebackgroundpath{%
+    \commtikz@circparams
+    \commtikz@drawcomplabel{0pt}{0pt}%
+  }
+}
+
+\def\commtikz@inheritcircanchors#1{%
+  \inheritsavedanchors[from=#1]%
+  \inheritanchorborder[from=#1]%
+  \inheritanchor[from=#1]{center}%
+  \inheritanchor[from=#1]{text}%
+  \inheritanchor[from=#1]{mid}%
+  \inheritanchor[from=#1]{base}%
+  \inheritanchor[from=#1]{north}%
+  \inheritanchor[from=#1]{south}%
+  \inheritanchor[from=#1]{east}%
+  \inheritanchor[from=#1]{west}%
+  \inheritanchor[from=#1]{north east}%
+  \inheritanchor[from=#1]{north west}%
+  \inheritanchor[from=#1]{south east}%
+  \inheritanchor[from=#1]{south west}%
+  \inheritanchor[from=#1]{N}%
+  \inheritanchor[from=#1]{S}%
+  \inheritanchor[from=#1]{E}%
+  \inheritanchor[from=#1]{W}%
+  \inheritanchor[from=#1]{N0}%
+  \inheritanchor[from=#1]{S0}%
+  \inheritanchor[from=#1]{E0}%
+  \inheritanchor[from=#1]{W0}%
+  \inheritanchor[from=#1]{NE}%
+  \inheritanchor[from=#1]{NW}%
+  \inheritanchor[from=#1]{SE}%
+  \inheritanchor[from=#1]{SW}%
+  \inheritanchor[from=#1]{in}%
+  \inheritanchor[from=#1]{out}%
+  \inheritanchor[from=#1]{input}%
+  \inheritanchor[from=#1]{output}%
+}
+
+% Generic block styles
+\tikzset{
+  commrect/.style={shape=commrect, commtikz base node, width=1, height=1},
+  rectblock/.style={commrect, #1},
+  rectblock/.default={},
+  commsquare/.style={shape=commrect, commtikz base node, width=1, height=1},
+  squareblock/.style={commsquare, #1},
+  squareblock/.default={},
+  commcircle/.style={shape=commcircle, commtikz base node, comp radius=0.5},
+  circleblock/.style={commcircle, #1},
+  circleblock/.default={},
+}

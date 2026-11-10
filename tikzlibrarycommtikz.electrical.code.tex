@@ -1,0 +1,475 @@
+%% tikzlibrarycommtikz.electrical.code.tex
+%% Electronic and Electrical Circuit Components Sublibrary for commtikz
+%% Passive elements (R, L, C, diodes), sources, ground/supply rails, op-amp/TIA, and transistors.
+
+\pgfkeys{
+  /tikz/commtikz/.cd,
+  iec/.initial=0,
+  zener/.initial=0,
+}
+
+\tikzset{
+  iec resistor/.is choice,
+  iec resistor/true/.style={/tikz/commtikz/iec=1},
+  iec resistor/false/.style={/tikz/commtikz/iec=0},
+  iec resistor/.default=true,
+  zener diode/.is choice,
+  zener diode/true/.style={/tikz/commtikz/zener=1},
+  zener diode/false/.style={/tikz/commtikz/zener=0},
+  zener diode/.default=true,
+}
+
+% ==============================================================================
+% 1. Resistor (IEEE zigzag default or IEC rectangular via 'iec resistor')
+% ==============================================================================
+\pgfdeclareshape{commtikz_resistor}{
+  \commtikz@inheritrectanchors{commrect}
+
+  \backgroundpath{%
+    \commtikz@rectparams
+    % Mask background wire behind resistor body
+    \pgfscope
+      \pgfsetfillcolor{\pgfkeysvalueof{/tikz/commtikz/fill}}%
+      \pgfpathrectanglecorners{\pgfpoint{-0.70\commtikz@hw}{-0.75\commtikz@hh}}{\pgfpoint{0.70\commtikz@hw}{0.75\commtikz@hh}}%
+      \pgfusepath{fill}%
+    \endpgfscope
+    \ifnum\pgfkeysvalueof{/tikz/commtikz/iec}=1\relax
+      % IEC rectangular resistor
+      \pgfpathmoveto{\pgfpoint{-\commtikz@hw}{0pt}}%
+      \pgfpathlineto{\pgfpoint{-0.68\commtikz@hw}{0pt}}%
+      \pgfpathrectanglecorners{\pgfpoint{-0.68\commtikz@hw}{-0.55\commtikz@hh}}{\pgfpoint{0.68\commtikz@hw}{0.55\commtikz@hh}}%
+      \pgfpathmoveto{\pgfpoint{0.68\commtikz@hw}{0pt}}%
+      \pgfpathlineto{\pgfpoint{\commtikz@hw}{0pt}}%
+      \pgfusepath{stroke}%
+    \else
+      % IEEE 6-peak zigzag resistor
+      \pgfpathmoveto{\pgfpoint{-\commtikz@hw}{0pt}}%
+      \pgfpathlineto{\pgfpoint{-0.72\commtikz@hw}{0pt}}%
+      \pgfpathlineto{\pgfpoint{-0.60\commtikz@hw}{0.70\commtikz@hh}}%
+      \pgfpathlineto{\pgfpoint{-0.36\commtikz@hw}{-0.70\commtikz@hh}}%
+      \pgfpathlineto{\pgfpoint{-0.12\commtikz@hw}{0.70\commtikz@hh}}%
+      \pgfpathlineto{\pgfpoint{0.12\commtikz@hw}{-0.70\commtikz@hh}}%
+      \pgfpathlineto{\pgfpoint{0.36\commtikz@hw}{0.70\commtikz@hh}}%
+      \pgfpathlineto{\pgfpoint{0.60\commtikz@hw}{-0.70\commtikz@hh}}%
+      \pgfpathlineto{\pgfpoint{0.72\commtikz@hw}{0pt}}%
+      \pgfpathlineto{\pgfpoint{\commtikz@hw}{0pt}}%
+      \pgfusepath{stroke}%
+    \fi
+    \ifnum\pgfkeysvalueof{/tikz/commtikz/tunable}=1\relax
+      \commtikz@drawarrow{-0.65\commtikz@hw}{-0.95\commtikz@hh}{0.65\commtikz@hw}{0.95\commtikz@hh}{0.13\commtikz@u}{0.09\commtikz@u}%
+    \fi
+  }
+}
+
+% ==============================================================================
+% 2. Capacitor (Parallel-plate capacitor)
+% ==============================================================================
+\pgfdeclareshape{commtikz_capacitor}{
+  \commtikz@inheritrectanchors{commrect}
+
+  \backgroundpath{%
+    \commtikz@rectparams
+    % Mask gap between plates
+    \pgfscope
+      \pgfsetfillcolor{\pgfkeysvalueof{/tikz/commtikz/fill}}%
+      \pgfpathrectanglecorners{\pgfpoint{-0.22\commtikz@hw}{-0.85\commtikz@hh}}{\pgfpoint{0.22\commtikz@hw}{0.85\commtikz@hh}}%
+      \pgfusepath{fill}%
+    \endpgfscope
+    % Left lead and plate
+    \pgfpathmoveto{\pgfpoint{-\commtikz@hw}{0pt}}%
+    \pgfpathlineto{\pgfpoint{-0.22\commtikz@hw}{0pt}}%
+    \pgfpathmoveto{\pgfpoint{-0.22\commtikz@hw}{-0.80\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.22\commtikz@hw}{0.80\commtikz@hh}}%
+    % Right plate and lead
+    \pgfpathmoveto{\pgfpoint{0.22\commtikz@hw}{-0.80\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{0.22\commtikz@hw}{0.80\commtikz@hh}}%
+    \pgfpathmoveto{\pgfpoint{0.22\commtikz@hw}{0pt}}%
+    \pgfpathlineto{\pgfpoint{\commtikz@hw}{0pt}}%
+    \pgfusepath{stroke}%
+    \ifnum\pgfkeysvalueof{/tikz/commtikz/tunable}=1\relax
+      \commtikz@drawarrow{-0.75\commtikz@hw}{-0.80\commtikz@hh}{0.75\commtikz@hw}{0.80\commtikz@hh}{0.13\commtikz@u}{0.09\commtikz@u}%
+    \fi
+  }
+}
+
+% ==============================================================================
+% 3. Inductor (4-arch coil inductor)
+% ==============================================================================
+\pgfdeclareshape{commtikz_inductor}{
+  \commtikz@inheritrectanchors{commrect}
+
+  \anchor{north}{\commtikz@rectparams\pgfpoint{0pt}{0.85\commtikz@hh}}
+  \anchor{N0}{\commtikz@rectparams\pgfpoint{0pt}{0.85\commtikz@hh}}
+  \anchor{south}{\commtikz@rectparams\pgfpoint{0pt}{-0.20\commtikz@hh}}
+  \anchor{S0}{\commtikz@rectparams\pgfpoint{0pt}{-0.20\commtikz@hh}}
+
+  \backgroundpath{%
+    \commtikz@rectparams
+    % Mask background wire under the 4 coil arches
+    \pgfscope
+      \pgfsetfillcolor{\pgfkeysvalueof{/tikz/commtikz/fill}}%
+      \pgfpathrectanglecorners{\pgfpoint{-0.76\commtikz@hw}{-0.15\commtikz@hh}}{\pgfpoint{0.76\commtikz@hw}{0.80\commtikz@hh}}%
+      \pgfusepath{fill}%
+    \endpgfscope
+    \pgfpathmoveto{\pgfpoint{-\commtikz@hw}{0pt}}%
+    \pgfpathlineto{\pgfpoint{-0.76\commtikz@hw}{0pt}}%
+    \pgfpatharcaxes{180}{0}{\pgfpoint{0.19\commtikz@hw}{0pt}}{\pgfpoint{0pt}{0.72\commtikz@hh}}%
+    \pgfpatharcaxes{180}{0}{\pgfpoint{0.19\commtikz@hw}{0pt}}{\pgfpoint{0pt}{0.72\commtikz@hh}}%
+    \pgfpatharcaxes{180}{0}{\pgfpoint{0.19\commtikz@hw}{0pt}}{\pgfpoint{0pt}{0.72\commtikz@hh}}%
+    \pgfpatharcaxes{180}{0}{\pgfpoint{0.19\commtikz@hw}{0pt}}{\pgfpoint{0pt}{0.72\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{\commtikz@hw}{0pt}}%
+    \pgfusepath{stroke}%
+  }
+}
+
+% ==============================================================================
+% 4. Diode / Zener Diode / Circuit Photodiode / Circuit LED
+% ==============================================================================
+\pgfdeclareshape{commtikz_diode}{
+  \commtikz@inheritrectanchors{commrect}
+
+  \backgroundpath{%
+    \commtikz@rectparams
+    % Leads
+    \pgfpathmoveto{\pgfpoint{-\commtikz@hw}{0pt}}%
+    \pgfpathlineto{\pgfpoint{\commtikz@hw}{0pt}}%
+    % Cathode bar (with Zener wings if zener=1)
+    \ifnum\pgfkeysvalueof{/tikz/commtikz/zener}=1\relax
+      \pgfpathmoveto{\pgfpoint{0.28\commtikz@hw}{-0.72\commtikz@hh}}%
+      \pgfpathlineto{\pgfpoint{0.44\commtikz@hw}{-0.56\commtikz@hh}}%
+      \pgfpathlineto{\pgfpoint{0.44\commtikz@hw}{0.56\commtikz@hh}}%
+      \pgfpathlineto{\pgfpoint{0.60\commtikz@hw}{0.72\commtikz@hh}}%
+    \else
+      \pgfpathmoveto{\pgfpoint{0.44\commtikz@hw}{-0.65\commtikz@hh}}%
+      \pgfpathlineto{\pgfpoint{0.44\commtikz@hw}{0.65\commtikz@hh}}%
+    \fi
+    \pgfusepath{stroke}%
+    % Filled anode-to-cathode triangle
+    \pgfscope
+      \commtikz@use@strokecolor@as@fill
+      \pgfpathmoveto{\pgfpoint{-0.44\commtikz@hw}{-0.65\commtikz@hh}}%
+      \pgfpathlineto{\pgfpoint{-0.44\commtikz@hw}{0.65\commtikz@hh}}%
+      \pgfpathlineto{\pgfpoint{0.44\commtikz@hw}{0pt}}%
+      \pgfpathclose
+      \pgfusepath{fill,stroke}%
+    \endpgfscope
+  }
+}
+
+\pgfdeclareshape{commtikz_elpd}{
+  \commtikz@inheritrectanchors{commrect}
+  \inheritbackgroundpath[from=commtikz_diode]
+
+  \beforebackgroundpath{%
+    \commtikz@rectparams
+    % Two incoming optical arrows above the diode
+    \commtikz@drawarrow{-0.35\commtikz@hw}{1.35\commtikz@hh}{-0.05\commtikz@hw}{0.72\commtikz@hh}{0.12\commtikz@u}{0.075\commtikz@u}%
+    \commtikz@drawarrow{0.05\commtikz@hw}{1.35\commtikz@hh}{0.35\commtikz@hw}{0.72\commtikz@hh}{0.12\commtikz@u}{0.075\commtikz@u}%
+  }
+}
+
+\pgfdeclareshape{commtikz_elld}{
+  \commtikz@inheritrectanchors{commrect}
+  \inheritbackgroundpath[from=commtikz_diode]
+
+  \beforebackgroundpath{%
+    \commtikz@rectparams
+    % Two outgoing optical arrows above the diode
+    \commtikz@drawarrow{-0.25\commtikz@hw}{0.72\commtikz@hh}{0.08\commtikz@hw}{1.35\commtikz@hh}{0.12\commtikz@u}{0.075\commtikz@u}%
+    \commtikz@drawarrow{0.12\commtikz@hw}{0.72\commtikz@hh}{0.45\commtikz@hw}{1.35\commtikz@hh}{0.12\commtikz@u}{0.075\commtikz@u}%
+  }
+}
+
+% ==============================================================================
+% 5. Sources: DC Voltage (vsource), DC Current (isource), AC Signal (acsource)
+% ==============================================================================
+\pgfdeclareshape{commtikz_vsource}{
+  \commtikz@inheritcircanchors{commcircle}
+  \inheritbackgroundpath[from=commcircle]
+
+  \beforebackgroundpath{%
+    \commtikz@circparams
+    % Horizontal minus sign on left (-0.42*r), Plus sign on right (+0.42*r)
+    \pgfpathmoveto{\pgfpoint{-0.62\commtikz@r}{0pt}}%
+    \pgfpathlineto{\pgfpoint{-0.22\commtikz@r}{0pt}}%
+    \pgfpathmoveto{\pgfpoint{0.22\commtikz@r}{0pt}}%
+    \pgfpathlineto{\pgfpoint{0.62\commtikz@r}{0pt}}%
+    \pgfpathmoveto{\pgfpoint{0.42\commtikz@r}{-0.20\commtikz@r}}%
+    \pgfpathlineto{\pgfpoint{0.42\commtikz@r}{0.20\commtikz@r}}%
+    \pgfusepath{stroke}%
+  }
+}
+
+\pgfdeclareshape{commtikz_isource}{
+  \commtikz@inheritcircanchors{commcircle}
+  \inheritbackgroundpath[from=commcircle]
+
+  \beforebackgroundpath{%
+    \commtikz@circparams
+    \commtikz@drawarrow{-0.58\commtikz@r}{0pt}{0.58\commtikz@r}{0pt}{0.18\commtikz@u}{0.12\commtikz@u}%
+  }
+}
+
+\pgfdeclareshape{commtikz_acsource}{
+  \commtikz@inheritcircanchors{commcircle}
+  \inheritbackgroundpath[from=commcircle]
+
+  \beforebackgroundpath{%
+    \commtikz@circparams
+    \commtikz@hw=\commtikz@r\relax
+    \commtikz@hh=\commtikz@r\relax
+    \commtikz@drawsinewave{0pt}%
+    \pgfusepath{stroke}%
+  }
+}
+
+% ==============================================================================
+% 6. Ground (ground / gnd) and Supply Rail (vcc / vdd)
+% ==============================================================================
+\pgfdeclareshape{commtikz_ground}{
+  \commtikz@inheritrectanchors{commrect}
+
+  \anchor{in}{\commtikz@rectparams\pgfpoint{0pt}{\commtikz@hh}}
+  \anchor{N0}{\commtikz@rectparams\pgfpoint{0pt}{\commtikz@hh}}
+  \anchor{north}{\commtikz@rectparams\pgfpoint{0pt}{\commtikz@hh}}
+
+  \backgroundpath{%
+    \commtikz@rectparams
+    % Vertical stem from top (+hh) to 0
+    \pgfpathmoveto{\pgfpoint{0pt}{\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{0pt}{0pt}}%
+    % 3 horizontal ground bars of decreasing width
+    \pgfpathmoveto{\pgfpoint{-\commtikz@hw}{0pt}}%
+    \pgfpathlineto{\pgfpoint{\commtikz@hw}{0pt}}%
+    \pgfpathmoveto{\pgfpoint{-0.62\commtikz@hw}{-0.42\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{0.62\commtikz@hw}{-0.42\commtikz@hh}}%
+    \pgfpathmoveto{\pgfpoint{-0.25\commtikz@hw}{-0.84\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{0.25\commtikz@hw}{-0.84\commtikz@hh}}%
+    \pgfusepath{stroke}%
+  }
+}
+
+\pgfdeclareshape{commtikz_vcc}{
+  \commtikz@inheritrectanchors{commrect}
+
+  \anchor{in}{\commtikz@rectparams\pgfpoint{0pt}{-\commtikz@hh}}
+  \anchor{S0}{\commtikz@rectparams\pgfpoint{0pt}{-\commtikz@hh}}
+  \anchor{south}{\commtikz@rectparams\pgfpoint{0pt}{-\commtikz@hh}}
+
+  \backgroundpath{%
+    \commtikz@rectparams
+    \pgfpathmoveto{\pgfpoint{0pt}{-\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{0pt}{0.20\commtikz@hh}}%
+    \pgfpathmoveto{\pgfpoint{-\commtikz@hw}{0.20\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{\commtikz@hw}{0.20\commtikz@hh}}%
+    \pgfusepath{stroke}%
+  }
+}
+
+% ==============================================================================
+% 7. Op-Amp / Transimpedance Amplifier (opamp / tia)
+% ==============================================================================
+\pgfdeclareshape{commtikz_opamp}{
+  \commtikz@inheritrectanchors{commrect}
+
+  \anchor{in-}{\csname pgf@anchor@commtikz_opamp@W0\endcsname}
+  \anchor{in+}{\csname pgf@anchor@commtikz_opamp@W1\endcsname}
+  \anchor{out}{\csname pgf@anchor@commtikz_opamp@E0\endcsname}
+  \anchor{north}{\commtikz@rectparams\pgfpoint{-0.20\commtikz@hw}{0.60\commtikz@hh}}
+  \anchor{N0}{\commtikz@rectparams\pgfpoint{-0.20\commtikz@hw}{0.60\commtikz@hh}}
+  \anchor{south}{\commtikz@rectparams\pgfpoint{-0.20\commtikz@hw}{-0.60\commtikz@hh}}
+  \anchor{S0}{\commtikz@rectparams\pgfpoint{-0.20\commtikz@hw}{-0.60\commtikz@hh}}
+
+  \backgroundpath{%
+    \commtikz@rectparams
+    \pgfpathmoveto{\pgfpoint{-\commtikz@hw}{\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{\commtikz@hw}{0pt}}%
+    \pgfpathlineto{\pgfpoint{-\commtikz@hw}{-\commtikz@hh}}%
+    \pgfpathclose
+  }
+
+  \beforebackgroundpath{%
+    \commtikz@rectparams
+    \ifnum\pgfkeysvalueof{/tikz/commtikz/flip}=1\relax
+      % Plus at top (W0), Minus at bottom (W1)
+      \pgfpathmoveto{\pgfpoint{-0.76\commtikz@hw}{0.3333\commtikz@hh}}%
+      \pgfpathlineto{\pgfpoint{-0.52\commtikz@hw}{0.3333\commtikz@hh}}%
+      \pgfpathmoveto{\pgfpoint{-0.64\commtikz@hw}{0.2133\commtikz@hh}}%
+      \pgfpathlineto{\pgfpoint{-0.64\commtikz@hw}{0.4533\commtikz@hh}}%
+      \pgfpathmoveto{\pgfpoint{-0.76\commtikz@hw}{-0.3333\commtikz@hh}}%
+      \pgfpathlineto{\pgfpoint{-0.52\commtikz@hw}{-0.3333\commtikz@hh}}%
+    \else
+      % Minus at top (W0), Plus at bottom (W1)
+      \pgfpathmoveto{\pgfpoint{-0.76\commtikz@hw}{0.3333\commtikz@hh}}%
+      \pgfpathlineto{\pgfpoint{-0.52\commtikz@hw}{0.3333\commtikz@hh}}%
+      \pgfpathmoveto{\pgfpoint{-0.76\commtikz@hw}{-0.3333\commtikz@hh}}%
+      \pgfpathlineto{\pgfpoint{-0.52\commtikz@hw}{-0.3333\commtikz@hh}}%
+      \pgfpathmoveto{\pgfpoint{-0.64\commtikz@hw}{-0.4533\commtikz@hh}}%
+      \pgfpathlineto{\pgfpoint{-0.64\commtikz@hw}{-0.2133\commtikz@hh}}%
+    \fi
+    \pgfusepath{stroke}%
+  }
+}
+
+% ==============================================================================
+% 8. Transistors: NMOS / FET (nmos / fet) and NPN BJT (npn / bjt)
+% ==============================================================================
+\pgfdeclareshape{commtikz_nmos}{
+  \commtikz@inheritrectanchors{commrect}
+
+  \anchor{G}{\commtikz@rectparams\pgfpoint{-\commtikz@hw}{0pt}}
+  \anchor{W0}{\commtikz@rectparams\pgfpoint{-\commtikz@hw}{0pt}}
+  \anchor{west}{\commtikz@rectparams\pgfpoint{-\commtikz@hw}{0pt}}
+  \anchor{D}{\commtikz@rectparams\pgfpoint{0.50\commtikz@hw}{\commtikz@hh}}
+  \anchor{N0}{\commtikz@rectparams\pgfpoint{0.50\commtikz@hw}{\commtikz@hh}}
+  \anchor{north}{\commtikz@rectparams\pgfpoint{0.50\commtikz@hw}{\commtikz@hh}}
+  \anchor{S}{\commtikz@rectparams\pgfpoint{0.50\commtikz@hw}{-\commtikz@hh}}
+  \anchor{S0}{\commtikz@rectparams\pgfpoint{0.50\commtikz@hw}{-\commtikz@hh}}
+  \anchor{south}{\commtikz@rectparams\pgfpoint{0.50\commtikz@hw}{-\commtikz@hh}}
+
+  \backgroundpath{%
+    \commtikz@rectparams
+    % Gate lead and vertical gate bar
+    \pgfpathmoveto{\pgfpoint{-\commtikz@hw}{0pt}}%
+    \pgfpathlineto{\pgfpoint{-0.35\commtikz@hw}{0pt}}%
+    \pgfpathmoveto{\pgfpoint{-0.35\commtikz@hw}{-0.52\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.35\commtikz@hw}{0.52\commtikz@hh}}%
+    % Channel bar
+    \pgfpathmoveto{\pgfpoint{-0.10\commtikz@hw}{-0.60\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.10\commtikz@hw}{0.60\commtikz@hh}}%
+    % Drain path to top
+    \pgfpathmoveto{\pgfpoint{-0.10\commtikz@hw}{0.45\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{0.50\commtikz@hw}{0.45\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{0.50\commtikz@hw}{\commtikz@hh}}%
+    % Source path to bottom
+    \pgfpathmoveto{\pgfpoint{-0.10\commtikz@hw}{-0.45\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{0.50\commtikz@hw}{-0.45\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{0.50\commtikz@hw}{-\commtikz@hh}}%
+    \pgfusepath{stroke}%
+    % Source arrow
+    \commtikz@drawarrow{-0.10\commtikz@hw}{-0.45\commtikz@hh}{0.46\commtikz@hw}{-0.45\commtikz@hh}{0.11\commtikz@u}{0.075\commtikz@u}%
+  }
+}
+
+\pgfdeclareshape{commtikz_npn}{
+  \commtikz@inheritrectanchors{commrect}
+
+  \anchor{B}{\commtikz@rectparams\pgfpoint{-\commtikz@hw}{0pt}}
+  \anchor{W0}{\commtikz@rectparams\pgfpoint{-\commtikz@hw}{0pt}}
+  \anchor{west}{\commtikz@rectparams\pgfpoint{-\commtikz@hw}{0pt}}
+  \anchor{C}{\commtikz@rectparams\pgfpoint{0.50\commtikz@hw}{\commtikz@hh}}
+  \anchor{N0}{\commtikz@rectparams\pgfpoint{0.50\commtikz@hw}{\commtikz@hh}}
+  \anchor{north}{\commtikz@rectparams\pgfpoint{0.50\commtikz@hw}{\commtikz@hh}}
+  \anchor{E}{\commtikz@rectparams\pgfpoint{0.50\commtikz@hw}{-\commtikz@hh}}
+  \anchor{S0}{\commtikz@rectparams\pgfpoint{0.50\commtikz@hw}{-\commtikz@hh}}
+  \anchor{south}{\commtikz@rectparams\pgfpoint{0.50\commtikz@hw}{-\commtikz@hh}}
+
+  \backgroundpath{%
+    \commtikz@rectparams
+    % Base lead and vertical base bar
+    \pgfpathmoveto{\pgfpoint{-\commtikz@hw}{0pt}}%
+    \pgfpathlineto{\pgfpoint{-0.20\commtikz@hw}{0pt}}%
+    \pgfpathmoveto{\pgfpoint{-0.20\commtikz@hw}{-0.55\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.20\commtikz@hw}{0.55\commtikz@hh}}%
+    % Collector path to top
+    \pgfpathmoveto{\pgfpoint{-0.20\commtikz@hw}{0.22\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{0.50\commtikz@hw}{0.65\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{0.50\commtikz@hw}{\commtikz@hh}}%
+    % Emitter vertical stub at bottom
+    \pgfpathmoveto{\pgfpoint{0.50\commtikz@hw}{-0.65\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{0.50\commtikz@hw}{-\commtikz@hh}}%
+    \pgfusepath{stroke}%
+    % Emitter diagonal arrow from base bar to emitter stub
+    \commtikz@drawarrow{-0.20\commtikz@hw}{-0.22\commtikz@hh}{0.50\commtikz@hw}{-0.65\commtikz@hh}{0.12\commtikz@u}{0.08\commtikz@u}%
+  }
+}
+
+% ==============================================================================
+% 9. User-facing TikZ Styles & Inline Path Styles for Electrical Sublibrary
+% ==============================================================================
+\tikzset{
+  % Passive components
+  resistor/.style={shape=commtikz_resistor, commtikz bare node, width=0.80, height=0.32},
+  R/.style={resistor, #1},
+  R/.default={},
+  rbox/.style={resistor, iec resistor=true, #1},
+  rbox/.default={},
+  capacitor/.style={shape=commtikz_capacitor, commtikz bare node, width=0.55, height=0.42},
+  C/.style={capacitor, #1},
+  C/.default={},
+  inductor/.style={shape=commtikz_inductor, commtikz bare node, width=0.85, height=0.38},
+  L/.style={inductor, #1},
+  L/.default={},
+  % Diodes
+  diode/.style={shape=commtikz_diode, commtikz bare node, width=0.65, height=0.38},
+  D/.style={diode, #1},
+  D/.default={},
+  zener/.style={diode, zener diode=true, #1},
+  zener/.default={},
+  elpd/.style={shape=commtikz_elpd, commtikz bare node, width=0.65, height=0.38},
+  cktpd/.style={elpd, #1},
+  cktpd/.default={},
+  elld/.style={shape=commtikz_elld, commtikz bare node, width=0.65, height=0.38},
+  led/.style={elld, #1},
+  led/.default={},
+  % Sources
+  vsource/.style={shape=commtikz_vsource, commtikz base node, comp radius=0.38},
+  dcvoltage/.style={vsource, #1},
+  dcvoltage/.default={},
+  isource/.style={shape=commtikz_isource, commtikz base node, comp radius=0.38},
+  dccurrent/.style={isource, #1},
+  dccurrent/.default={},
+  acsource/.style={shape=commtikz_acsource, commtikz base node, comp radius=0.38},
+  rfsource/.style={acsource, #1},
+  rfsource/.default={},
+  % Grounds, Supply Rails & Nodes
+  ground/.style={shape=commtikz_ground, commtikz bare node, width=0.42, height=0.30, anchor=north},
+  gnd/.style={ground, #1},
+  gnd/.default={},
+  vcc/.style={shape=commtikz_vcc, commtikz bare node, width=0.40, height=0.28, anchor=south},
+  vdd/.style={vcc, #1},
+  vdd/.default={},
+  edot/.style={circle, fill=black, draw=black, minimum size=3.0pt, inner sep=0pt, outer sep=0pt},
+  junction/.style={edot, #1},
+  junction/.default={},
+  % Active blocks & Transistors
+  opamp/.style={shape=commtikz_opamp, commtikz base node, width=1.00, height=1.05, numW=2, numE=1},
+  tia/.style={opamp, #1},
+  tia/.default={},
+  nmos/.style={shape=commtikz_nmos, commtikz bare node, width=0.65, height=0.75},
+  fet/.style={nmos, #1},
+  fet/.default={},
+  npn/.style={shape=commtikz_npn, commtikz bare node, width=0.65, height=0.75},
+  bjt/.style={npn, #1},
+  bjt/.default={},
+  % Inline path placement shorthands
+  to resistor/.style={inline={resistor, #1}},
+  to resistor/.default={},
+  to R/.style={inline={resistor, #1}},
+  to R/.default={},
+  to capacitor/.style={inline={capacitor, #1}},
+  to capacitor/.default={},
+  to C/.style={inline={capacitor, #1}},
+  to C/.default={},
+  to inductor/.style={inline={inductor, #1}},
+  to inductor/.default={},
+  to L/.style={inline={inductor, #1}},
+  to L/.default={},
+  to diode/.style={inline={diode, #1}},
+  to diode/.default={},
+  to D/.style={inline={diode, #1}},
+  to D/.default={},
+  to zener/.style={inline={zener, #1}},
+  to zener/.default={},
+  to elpd/.style={inline={elpd, #1}},
+  to elpd/.default={},
+  to elld/.style={inline={elld, #1}},
+  to elld/.default={},
+  to vsource/.style={inline={vsource, #1}},
+  to vsource/.default={},
+  to isource/.style={inline={isource, #1}},
+  to isource/.default={},
+  to acsource/.style={inline={acsource, #1}},
+  to acsource/.default={},
+}
+\endinput

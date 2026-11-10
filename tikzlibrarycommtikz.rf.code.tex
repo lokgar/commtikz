@@ -1,0 +1,427 @@
+%% tikzlibrarycommtikz.rf.code.tex
+%% RF, Analog, and DSP schematic components.
+
+% Helper macro: Draw a smooth cubic Bezier sine wave centered at (0, #1) spanning [-0.6*hw, +0.6*hw]
+\def\commtikz@drawsinewave#1{%
+  \pgfmathsetlength\commtikz@sy{#1}%
+  \pgfpathmoveto{\pgfpoint{-0.60\commtikz@hw}{\commtikz@sy}}%
+  \pgfpathcurveto
+    {\pgfpoint{-0.40\commtikz@hw}{\dimexpr\commtikz@sy + 0.27\commtikz@hh\relax}}
+    {\pgfpoint{-0.20\commtikz@hw}{\dimexpr\commtikz@sy + 0.27\commtikz@hh\relax}}
+    {\pgfpoint{0pt}{\commtikz@sy}}%
+  \pgfpathcurveto
+    {\pgfpoint{0.20\commtikz@hw}{\dimexpr\commtikz@sy - 0.27\commtikz@hh\relax}}
+    {\pgfpoint{0.40\commtikz@hw}{\dimexpr\commtikz@sy - 0.27\commtikz@hh\relax}}
+    {\pgfpoint{0.60\commtikz@hw}{\commtikz@sy}}%
+}
+
+% ==============================================================================
+% 1. Amp & VGA (Triangle Amplifier / Variable Gain Amplifier / EDFA / SOA)
+% ==============================================================================
+\pgfdeclareshape{commtikz_amp}{
+  \commtikz@inheritrectanchors{commrect}
+
+  \savedanchor\amptextpoint{%
+    \pgfmathsetlength\commtikz@u{\pgfkeysvalueof{/tikz/commtikz/unit}}%
+    \pgfmathparse{\pgfkeysvalueof{/tikz/commtikz/width}}%
+    \ifpgfmathunitsdeclared
+      \pgfmathsetlength\commtikz@hw{0.5 * \pgfmathresult pt}%
+    \else
+      \pgfmathsetlength\commtikz@hw{0.5 * \pgfmathresult * \commtikz@u}%
+    \fi
+    \pgf@x=-0.30\commtikz@hw\relax
+    \advance\pgf@x by -0.5\wd\pgfnodeparttextbox\relax
+    \pgf@y=-0.5\ht\pgfnodeparttextbox\relax
+    \advance\pgf@y by 0.5\dp\pgfnodeparttextbox\relax
+  }
+  \anchor{text}{\amptextpoint}
+
+  % Slanted edge midpoint anchors for north/south
+  \anchor{north}{\commtikz@rectparams\pgfpoint{0pt}{0.5\commtikz@hh}}
+  \anchor{south}{\commtikz@rectparams\pgfpoint{0pt}{-0.5\commtikz@hh}}
+  \anchor{N}{\commtikz@rectparams\pgfpoint{0pt}{0.5\commtikz@hh}}
+  \anchor{S}{\commtikz@rectparams\pgfpoint{0pt}{-0.5\commtikz@hh}}
+  \anchor{N0}{\commtikz@rectparams\pgfpoint{0pt}{0.5\commtikz@hh}}
+  \anchor{S0}{\commtikz@rectparams\pgfpoint{0pt}{-0.5\commtikz@hh}}
+  \anchor{tune}{%
+    \commtikz@rectparams
+    \ifnum\pgfkeysvalueof{/tikz/commtikz/tuneup}=1\relax
+      \pgfpoint{-0.1333\commtikz@hw}{\commtikz@hh}%
+    \else
+      \pgfpoint{-0.1333\commtikz@hw}{-\commtikz@hh}%
+    \fi
+  }
+
+  \backgroundpath{%
+    \commtikz@rectparams
+    \ifnum\pgfkeysvalueof{/tikz/commtikz/flip}=1\relax
+      \pgfpathmoveto{\pgfpoint{\commtikz@hw}{-\commtikz@hh}}%
+      \pgfpathlineto{\pgfpoint{-\commtikz@hw}{0pt}}%
+      \pgfpathlineto{\pgfpoint{\commtikz@hw}{\commtikz@hh}}%
+      \pgfpathclose
+    \else
+      \pgfpathmoveto{\pgfpoint{-\commtikz@hw}{-\commtikz@hh}}%
+      \pgfpathlineto{\pgfpoint{\commtikz@hw}{0pt}}%
+      \pgfpathlineto{\pgfpoint{-\commtikz@hw}{\commtikz@hh}}%
+      \pgfpathclose
+    \fi
+  }
+
+  \beforebackgroundpath{%
+    \commtikz@rectparams
+    \ifnum\pgfkeysvalueof{/tikz/commtikz/tunable}=1\relax
+      \commtikz@drawarrow{-1.20\commtikz@hw}{-\commtikz@hh}{1.00\commtikz@hw}{\commtikz@hh}{0.16\commtikz@u}{0.11\commtikz@u}%
+    \fi
+    \commtikz@drawcomplabel{-0.30\commtikz@hw}{0pt}%
+  }
+}
+
+% ==============================================================================
+% 2. Filter (Square with 3 sine waves and response='lp'|'bp'|'hp'|'notch')
+% ==============================================================================
+\def\commtikz@resp@lp{lp}
+\def\commtikz@resp@bp{bp}
+\def\commtikz@resp@hp{hp}
+\def\commtikz@resp@notch{notch}
+
+\pgfdeclareshape{commtikz_filter}{
+  \commtikz@inheritrectanchors{commrect}
+  \inheritbackgroundpath[from=commrect]
+
+  \beforebackgroundpath{%
+    \commtikz@rectparams
+    % 3 stacked sine waves at +0.50*hh, 0, -0.50*hh
+    \commtikz@drawsinewave{0.50\commtikz@hh}%
+    \commtikz@drawsinewave{0pt}%
+    \commtikz@drawsinewave{-0.50\commtikz@hh}%
+    % Filter response slashes
+    \edef\commtikz@curresp{\pgfkeysvalueof{/tikz/commtikz/response}}%
+    \ifx\commtikz@curresp\commtikz@resp@lp
+      % Slash high-f (top) and mid-f (center)
+      \pgfpathmoveto{\pgfpoint{-0.10\commtikz@hw}{0.34\commtikz@hh}}%
+      \pgfpathlineto{\pgfpoint{0.10\commtikz@hw}{0.66\commtikz@hh}}%
+      \pgfpathmoveto{\pgfpoint{-0.10\commtikz@hw}{-0.16\commtikz@hh}}%
+      \pgfpathlineto{\pgfpoint{0.10\commtikz@hw}{0.16\commtikz@hh}}%
+    \fi
+    \ifx\commtikz@curresp\commtikz@resp@bp
+      % Slash high-f (top) and low-f (bottom)
+      \pgfpathmoveto{\pgfpoint{-0.10\commtikz@hw}{0.34\commtikz@hh}}%
+      \pgfpathlineto{\pgfpoint{0.10\commtikz@hw}{0.66\commtikz@hh}}%
+      \pgfpathmoveto{\pgfpoint{-0.10\commtikz@hw}{-0.66\commtikz@hh}}%
+      \pgfpathlineto{\pgfpoint{0.10\commtikz@hw}{-0.34\commtikz@hh}}%
+    \fi
+    \ifx\commtikz@curresp\commtikz@resp@hp
+      % Slash mid-f (center) and low-f (bottom)
+      \pgfpathmoveto{\pgfpoint{-0.10\commtikz@hw}{-0.16\commtikz@hh}}%
+      \pgfpathlineto{\pgfpoint{0.10\commtikz@hw}{0.16\commtikz@hh}}%
+      \pgfpathmoveto{\pgfpoint{-0.10\commtikz@hw}{-0.66\commtikz@hh}}%
+      \pgfpathlineto{\pgfpoint{0.10\commtikz@hw}{-0.34\commtikz@hh}}%
+    \fi
+    \ifx\commtikz@curresp\commtikz@resp@notch
+      % Slash mid-f (center)
+      \pgfpathmoveto{\pgfpoint{-0.10\commtikz@hw}{-0.16\commtikz@hh}}%
+      \pgfpathlineto{\pgfpoint{0.10\commtikz@hw}{0.16\commtikz@hh}}%
+    \fi
+    \pgfusepath{stroke}%
+  }
+}
+
+% ==============================================================================
+% 3. ADC and DAC (Pentagonal Converter Blocks with Analog/Digital Symbols)
+% ==============================================================================
+\pgfdeclareshape{commtikz_adc}{
+  \commtikz@inheritrectanchors{commrect}
+
+  \backgroundpath{%
+    \commtikz@rectparams
+    % Pentagonal ADC outline pointing left
+    \pgfpathmoveto{\pgfpoint{-\commtikz@hw}{0pt}}%
+    \pgfpathlineto{\pgfpoint{-0.6857\commtikz@hw}{\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{\commtikz@hw}{\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{\commtikz@hw}{-\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.6857\commtikz@hw}{-\commtikz@hh}}%
+    \pgfpathclose
+  }
+
+  \beforebackgroundpath{%
+    \commtikz@rectparams
+    % Diagonal divider separating Analog (upper-left) and Digital (lower-right)
+    \pgfpathmoveto{\pgfpoint{-0.30\commtikz@hw}{-0.68\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{0.58\commtikz@hw}{0.68\commtikz@hh}}%
+    % Upper-left: Analog sine wave
+    \pgfpathmoveto{\pgfpoint{-0.52\commtikz@hw}{0.34\commtikz@hh}}%
+    \pgfpathcurveto{\pgfpoint{-0.41\commtikz@hw}{0.62\commtikz@hh}}{\pgfpoint{-0.31\commtikz@hw}{0.62\commtikz@hh}}{\pgfpoint{-0.20\commtikz@hw}{0.34\commtikz@hh}}%
+    \pgfpathcurveto{\pgfpoint{-0.09\commtikz@hw}{0.06\commtikz@hh}}{\pgfpoint{0.01\commtikz@hw}{0.06\commtikz@hh}}{\pgfpoint{0.12\commtikz@hw}{0.34\commtikz@hh}}%
+    % Lower-right: Digital square pulse (_|¯|_)
+    \pgfpathmoveto{\pgfpoint{0.18\commtikz@hw}{-0.52\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{0.34\commtikz@hw}{-0.52\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{0.34\commtikz@hw}{-0.18\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{0.62\commtikz@hw}{-0.18\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{0.62\commtikz@hw}{-0.52\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{0.78\commtikz@hw}{-0.52\commtikz@hh}}%
+    \pgfusepath{stroke}%
+    \commtikz@drawcomplabel{0.10\commtikz@hw}{0pt}%
+  }
+}
+
+\pgfdeclareshape{commtikz_dac}{
+  \commtikz@inheritrectanchors{commrect}
+
+  \backgroundpath{%
+    \commtikz@rectparams
+    % Pentagonal DAC outline pointing right
+    \pgfpathmoveto{\pgfpoint{-\commtikz@hw}{\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{0.6857\commtikz@hw}{\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{\commtikz@hw}{0pt}}%
+    \pgfpathlineto{\pgfpoint{0.6857\commtikz@hw}{-\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-\commtikz@hw}{-\commtikz@hh}}%
+    \pgfpathclose
+  }
+
+  \beforebackgroundpath{%
+    \commtikz@rectparams
+    % Diagonal divider separating Digital (upper-left) and Analog (lower-right)
+    \pgfpathmoveto{\pgfpoint{-0.58\commtikz@hw}{-0.68\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{0.30\commtikz@hw}{0.68\commtikz@hh}}%
+    % Upper-left: Digital square pulse (_|¯|_)
+    \pgfpathmoveto{\pgfpoint{-0.78\commtikz@hw}{0.18\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.62\commtikz@hw}{0.18\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.62\commtikz@hw}{0.52\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.34\commtikz@hw}{0.52\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.34\commtikz@hw}{0.18\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.18\commtikz@hw}{0.18\commtikz@hh}}%
+    % Lower-right: Analog sine wave
+    \pgfpathmoveto{\pgfpoint{-0.12\commtikz@hw}{-0.34\commtikz@hh}}%
+    \pgfpathcurveto{\pgfpoint{-0.01\commtikz@hw}{-0.06\commtikz@hh}}{\pgfpoint{0.09\commtikz@hw}{-0.06\commtikz@hh}}{\pgfpoint{0.20\commtikz@hw}{-0.34\commtikz@hh}}%
+    \pgfpathcurveto{\pgfpoint{0.31\commtikz@hw}{-0.62\commtikz@hh}}{\pgfpoint{0.41\commtikz@hw}{-0.62\commtikz@hh}}{\pgfpoint{0.52\commtikz@hw}{-0.34\commtikz@hh}}%
+    \pgfusepath{stroke}%
+    \commtikz@drawcomplabel{-0.10\commtikz@hw}{0pt}%
+  }
+}
+
+% ==============================================================================
+% 4. Mixer, Sum, SumSigma, Oscillator, OscillatorBox, Demod
+% ==============================================================================
+\pgfdeclareshape{commtikz_mixer}{
+  \commtikz@inheritcircanchors{commcircle}
+  \inheritbackgroundpath[from=commcircle]
+
+  \beforebackgroundpath{%
+    \commtikz@circparams
+    \pgfpathmoveto{\pgfpoint{-\commtikz@rk}{\commtikz@rk}}%
+    \pgfpathlineto{\pgfpoint{\commtikz@rk}{-\commtikz@rk}}%
+    \pgfpathmoveto{\pgfpoint{-\commtikz@rk}{-\commtikz@rk}}%
+    \pgfpathlineto{\pgfpoint{\commtikz@rk}{\commtikz@rk}}%
+    \pgfusepath{stroke}%
+    % Optional sector labels N, S, E, W
+    \pgfscope
+      \commtikz@set@labelcolor
+      \pgfkeysgetvalue{/tikz/commtikz/sector N}{\commtikz@secN}%
+      \ifx\commtikz@secN\pgfutil@empty\else
+        \pgftext[at=\pgfpoint{0pt}{0.54\commtikz@r}]{\commtikz@set@labelcolor\tikz@textfont\tiny\commtikz@secN}%
+      \fi
+      \pgfkeysgetvalue{/tikz/commtikz/sector S}{\commtikz@secS}%
+      \ifx\commtikz@secS\pgfutil@empty\else
+        \pgftext[at=\pgfpoint{0pt}{-0.54\commtikz@r}]{\commtikz@set@labelcolor\tikz@textfont\tiny\commtikz@secS}%
+      \fi
+      \pgfkeysgetvalue{/tikz/commtikz/sector E}{\commtikz@secE}%
+      \ifx\commtikz@secE\pgfutil@empty\else
+        \pgftext[at=\pgfpoint{0.54\commtikz@r}{0pt}]{\commtikz@set@labelcolor\tikz@textfont\tiny\commtikz@secE}%
+      \fi
+      \pgfkeysgetvalue{/tikz/commtikz/sector W}{\commtikz@secW}%
+      \ifx\commtikz@secW\pgfutil@empty\else
+        \pgftext[at=\pgfpoint{-0.54\commtikz@r}{0pt}]{\commtikz@set@labelcolor\tikz@textfont\tiny\commtikz@secW}%
+      \fi
+    \endpgfscope
+  }
+}
+
+\pgfdeclareshape{commtikz_sum}{
+  \commtikz@inheritcircanchors{commcircle}
+  \inheritbackgroundpath[from=commcircle]
+
+  \beforebackgroundpath{%
+    \commtikz@circparams
+    \pgfpathmoveto{\pgfpoint{-0.40\commtikz@r}{0pt}}%
+    \pgfpathlineto{\pgfpoint{0.40\commtikz@r}{0pt}}%
+    \pgfpathmoveto{\pgfpoint{0pt}{-0.40\commtikz@r}}%
+    \pgfpathlineto{\pgfpoint{0pt}{0.40\commtikz@r}}%
+    \pgfusepath{stroke}%
+  }
+}
+
+\pgfdeclareshape{commtikz_sumsigma}{
+  \commtikz@inheritcircanchors{commcircle}
+  \inheritbackgroundpath[from=commcircle]
+
+  \beforebackgroundpath{%
+    \commtikz@circparams
+    % Immutable block-scaled geometric sans-serif Sigma
+    \pgfpathmoveto{\pgfpoint{0.28\commtikz@r}{0.36\commtikz@r}}%
+    \pgfpathlineto{\pgfpoint{-0.28\commtikz@r}{0.36\commtikz@r}}%
+    \pgfpathlineto{\pgfpoint{0.06\commtikz@r}{0pt}}%
+    \pgfpathlineto{\pgfpoint{-0.28\commtikz@r}{-0.36\commtikz@r}}%
+    \pgfpathlineto{\pgfpoint{0.28\commtikz@r}{-0.36\commtikz@r}}%
+    \pgfusepath{stroke}%
+  }
+}
+
+\pgfdeclareshape{commtikz_oscillator}{
+  \commtikz@inheritcircanchors{commcircle}
+  \inheritbackgroundpath[from=commcircle]
+
+  \beforebackgroundpath{%
+    \commtikz@circparams
+    \commtikz@hw=\commtikz@r\relax
+    \commtikz@hh=\commtikz@r\relax
+    \commtikz@drawsinewave{0pt}%
+    \pgfusepath{stroke}%
+  }
+}
+
+\pgfdeclareshape{commtikz_oscillatorbox}{
+  \commtikz@inheritrectanchors{commrect}
+  \inheritbackgroundpath[from=commrect]
+
+  \beforebackgroundpath{%
+    \commtikz@rectparams
+    \commtikz@drawsinewave{0pt}%
+    \pgfusepath{stroke}%
+  }
+}
+
+\pgfdeclareshape{commtikz_demod}{
+  \commtikz@inheritrectanchors{commrect}
+  \inheritbackgroundpath[from=commrect]
+
+  \beforebackgroundpath{%
+    \commtikz@rectparams
+    \pgfpathmoveto{\pgfpoint{-0.70\commtikz@hw}{0pt}}%
+    \pgfpathlineto{\pgfpoint{-0.40\commtikz@hw}{0pt}}%
+    \pgfpathmoveto{\pgfpoint{-0.40\commtikz@hw}{0.50\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{0.40\commtikz@hw}{0pt}}%
+    \pgfpathlineto{\pgfpoint{-0.40\commtikz@hw}{-0.50\commtikz@hh}}%
+    \pgfpathclose
+    \pgfpathmoveto{\pgfpoint{0.40\commtikz@hw}{0.50\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{0.40\commtikz@hw}{-0.50\commtikz@hh}}%
+    \pgfpathmoveto{\pgfpoint{0.40\commtikz@hw}{0pt}}%
+    \pgfpathlineto{\pgfpoint{0.70\commtikz@hw}{0pt}}%
+    \pgfusepath{stroke}%
+  }
+}
+
+% ==============================================================================
+% 5. Bias-Tee and RF Attenuator (Additional Electro-Optical RF Blocks)
+% ==============================================================================
+\pgfdeclareshape{commtikz_biastee}{
+  \commtikz@inheritrectanchors{commrect}
+  \inheritbackgroundpath[from=commrect]
+
+  \anchor{rf}{\csname pgf@anchor@commtikz_biastee@W0\endcsname}
+  \anchor{dc}{\csname pgf@anchor@commtikz_biastee@N0\endcsname}
+  \anchor{rfdc}{\csname pgf@anchor@commtikz_biastee@E0\endcsname}
+
+  \beforebackgroundpath{%
+    \commtikz@rectparams
+    % Horizontal RF path with series capacitor on left (-0.30*hw and -0.12*hw)
+    \pgfpathmoveto{\pgfpoint{-0.85\commtikz@hw}{-0.15\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.32\commtikz@hw}{-0.15\commtikz@hh}}%
+    \pgfpathmoveto{\pgfpoint{-0.32\commtikz@hw}{-0.48\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.32\commtikz@hw}{0.18\commtikz@hh}}%
+    \pgfpathmoveto{\pgfpoint{-0.12\commtikz@hw}{-0.48\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.12\commtikz@hw}{0.18\commtikz@hh}}%
+    \pgfpathmoveto{\pgfpoint{-0.12\commtikz@hw}{-0.15\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{0.85\commtikz@hw}{-0.15\commtikz@hh}}%
+    % Vertical DC bias inductor from top (0.28*hw, +0.85*hh) to (0.28*hw, -0.15*hh)
+    \pgfpathmoveto{\pgfpoint{0.28\commtikz@hw}{0.85\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{0.28\commtikz@hw}{0.65\commtikz@hh}}%
+    \pgfpatharc{90}{-90}{0.12\commtikz@hh}%
+    \pgfpatharc{90}{-90}{0.12\commtikz@hh}%
+    \pgfpatharc{90}{-90}{0.12\commtikz@hh}%
+    \pgfpathlineto{\pgfpoint{0.28\commtikz@hw}{-0.15\commtikz@hh}}%
+    \pgfusepath{stroke}%
+  }
+}
+
+\pgfdeclareshape{commtikz_rfatt}{
+  \commtikz@inheritrectanchors{commrect}
+  \inheritbackgroundpath[from=commrect]
+
+  \beforebackgroundpath{%
+    \commtikz@rectparams
+    % Zig-zag resistor inside block
+    \pgfpathmoveto{\pgfpoint{-0.80\commtikz@hw}{0pt}}%
+    \pgfpathlineto{\pgfpoint{-0.55\commtikz@hw}{0pt}}%
+    \pgfpathlineto{\pgfpoint{-0.42\commtikz@hw}{0.28\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.18\commtikz@hw}{-0.28\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{0.06\commtikz@hw}{0.28\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{0.30\commtikz@hw}{-0.28\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{0.48\commtikz@hw}{0.28\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{0.60\commtikz@hw}{0pt}}%
+    \pgfpathlineto{\pgfpoint{0.80\commtikz@hw}{0pt}}%
+    \pgfusepath{stroke}%
+    \ifnum\pgfkeysvalueof{/tikz/commtikz/tunable}=1\relax
+      \commtikz@drawarrow{-0.65\commtikz@hw}{-0.65\commtikz@hh}{0.65\commtikz@hw}{0.65\commtikz@hh}{0.13\commtikz@u}{0.09\commtikz@u}%
+    \fi
+  }
+}
+
+% ==============================================================================
+% 6. Termination (X cross at end of line)
+% ==============================================================================
+\pgfdeclareshape{commtikz_termination}{
+  \commtikz@inheritrectanchors{commrect}
+
+  % Origin anchors for end-of-line termination
+  \anchor{in}{\pgfpointorigin}
+  \anchor{out}{\pgfpointorigin}
+  \anchor{W0}{\pgfpointorigin}
+  \anchor{E0}{\pgfpointorigin}
+  \anchor{N0}{\pgfpointorigin}
+  \anchor{S0}{\pgfpointorigin}
+  \anchor{west}{\pgfpointorigin}
+  \anchor{east}{\pgfpointorigin}
+  \anchor{north}{\pgfpointorigin}
+  \anchor{south}{\pgfpointorigin}
+
+  \backgroundpath{%
+    \commtikz@rectparams
+    \pgfpathmoveto{\pgfpoint{-\commtikz@hw}{-\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{\commtikz@hw}{\commtikz@hh}}%
+    \pgfpathmoveto{\pgfpoint{-\commtikz@hw}{\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{\commtikz@hw}{-\commtikz@hh}}%
+    \pgfusepath{stroke}%
+  }
+}
+
+% ==============================================================================
+% 7. User-facing TikZ Styles for RF, Analog & DSP Components
+% ==============================================================================
+\tikzset{
+  amp/.style={shape=commtikz_amp, commtikz base node, width=0.75, height=1.0},
+  vga/.style={shape=commtikz_amp, commtikz base node, width=0.75, height=1.0, tunable=true},
+  edfa/.style={shape=commtikz_amp, commtikz base node, width=0.80, height=1.0},
+  soa/.style={shape=commtikz_amp, commtikz base node, width=0.80, height=1.0},
+  filter/.style={shape=commtikz_filter, commtikz base node, width=1.0, height=1.0},
+  lpf/.style={filter, response=lp},
+  bpf/.style={filter, response=bp},
+  hpf/.style={filter, response=hp},
+  notchfilter/.style={filter, response=notch},
+  obpf/.style={filter, response=bp},
+  elpf/.style={filter, response=lp},
+  adc/.style={shape=commtikz_adc, commtikz base node, width=1.4, height=1.0},
+  dac/.style={shape=commtikz_dac, commtikz base node, width=1.4, height=1.0},
+  mixer/.style={shape=commtikz_mixer, commtikz base node, comp radius=0.5},
+  sum/.style={shape=commtikz_sum, commtikz base node, comp radius=0.5},
+  sumsigma/.style={shape=commtikz_sumsigma, commtikz base node, comp radius=0.5},
+  oscillator/.style={shape=commtikz_oscillator, commtikz base node, comp radius=0.5},
+  lo/.style={oscillator, #1},
+  lo/.default={},
+  oscillatorbox/.style={shape=commtikz_oscillatorbox, commtikz base node, width=1.0, height=1.0},
+  demod/.style={shape=commtikz_demod, commtikz base node, width=1.0, height=1.0},
+  biastee/.style={shape=commtikz_biastee, commtikz base node, width=1.0, height=1.0},
+  rfatt/.style={shape=commtikz_rfatt, commtikz base node, width=1.0, height=1.0},
+  termination/.style={shape=commtikz_termination, commtikz bare node, width=0.2, height=0.2},
+  term/.style={termination, #1},
+  term/.default={},
+}

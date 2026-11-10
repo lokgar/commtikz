@@ -1,0 +1,338 @@
+%% tikzlibrarycommtikz.instruments.code.tex
+%% Test and Measurement Instrument Shapes: OSA, ESA, AWG, OSC / Scope / DSO
+
+% ==============================================================================
+% Helper: Draw Instrument Screen (left side) and Control Buttons/Knob (right side)
+% Both screen and control panel span y in [-0.72*hh, +0.72*hh] and combined
+% x in [-0.82*hw, +0.82*hw], symmetrically centered inside [-hw, +hw] x [-hh, +hh].
+% ==============================================================================
+\def\commtikz@drawinstscreen{%
+  \pgfscope
+    % Rectangular display screen: x in [-0.82*hw, +0.38*hw], y in [-0.72*hh, +0.72*hh]
+    \pgfpathrectanglecorners{\pgfpoint{-0.82\commtikz@hw}{-0.72\commtikz@hh}}{\pgfpoint{0.38\commtikz@hw}{0.72\commtikz@hh}}%
+    % Control panel: x in [+0.54*hw, +0.82*hw] (center x = +0.68*hw), y in [-0.61*hh, +0.61*hh]
+    % Rotary knob at top: center (0.68*hw, 0.42*hh), radius 0.19*hh -> y in [+0.23*hh, +0.61*hh]
+    \pgfpathcircle{\pgfpoint{0.68\commtikz@hw}{0.42\commtikz@hh}}{0.19\commtikz@hh}%
+    \pgfpathmoveto{\pgfpoint{0.68\commtikz@hw}{0.42\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{0.76\commtikz@hw}{0.54\commtikz@hh}}%
+    % Two push-buttons below knob with equal 0.20*hh vertical spacing, bottom at -0.61*hh
+    \pgfpathrectanglecorners{\pgfpoint{0.54\commtikz@hw}{-0.19\commtikz@hh}}{\pgfpoint{0.82\commtikz@hw}{0.03\commtikz@hh}}%
+    \pgfpathrectanglecorners{\pgfpoint{0.54\commtikz@hw}{-0.61\commtikz@hh}}{\pgfpoint{0.82\commtikz@hw}{-0.39\commtikz@hh}}%
+    \pgfusepath{stroke}%
+  \endpgfscope
+}
+
+% ==============================================================================
+% Helper: Spectrum Trace (OSA & ESA)
+% ==============================================================================
+\def\commtikz@drawosatrace{%
+  \pgfscope
+    \pgfsetlinewidth{\pgfkeysvalueof{/tikz/commtikz/inner line width}}%
+    \pgfsetroundjoin
+    \pgfsetroundcap
+    \pgfpathmoveto{\pgfpoint{-0.7400\commtikz@hw}{-0.4523\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.7254\commtikz@hw}{-0.4952\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.7107\commtikz@hw}{-0.4391\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.6961\commtikz@hw}{-0.4760\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.6814\commtikz@hw}{-0.4377\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.6668\commtikz@hw}{-0.4679\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.6521\commtikz@hw}{-0.4209\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.6375\commtikz@hw}{-0.4607\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.6228\commtikz@hw}{-0.4009\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.6082\commtikz@hw}{-0.4418\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.5935\commtikz@hw}{-0.3860\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.5789\commtikz@hw}{-0.4262\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.5642\commtikz@hw}{-0.3730\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.5496\commtikz@hw}{-0.4009\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.5349\commtikz@hw}{-0.3510\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.5203\commtikz@hw}{-0.3834\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.5056\commtikz@hw}{-0.3223\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.4910\commtikz@hw}{-0.3493\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.4763\commtikz@hw}{-0.2790\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.4617\commtikz@hw}{-0.1877\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.4470\commtikz@hw}{0.1345\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.4324\commtikz@hw}{0.2428\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.4177\commtikz@hw}{0.3602\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.4031\commtikz@hw}{0.3761\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.3885\commtikz@hw}{0.4638\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.3738\commtikz@hw}{0.4346\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.3592\commtikz@hw}{0.4977\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.3445\commtikz@hw}{0.4416\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.3299\commtikz@hw}{0.4860\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.3152\commtikz@hw}{0.4192\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.3006\commtikz@hw}{0.4268\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.2859\commtikz@hw}{0.4257\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.2713\commtikz@hw}{0.4581\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.2566\commtikz@hw}{0.4272\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.2420\commtikz@hw}{0.4864\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.2273\commtikz@hw}{0.4569\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.2127\commtikz@hw}{0.5000\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.1980\commtikz@hw}{0.4565\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.1834\commtikz@hw}{0.4640\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.1687\commtikz@hw}{0.4206\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.1541\commtikz@hw}{0.4690\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.1394\commtikz@hw}{0.3884\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.1248\commtikz@hw}{0.4721\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.1101\commtikz@hw}{0.4381\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.0955\commtikz@hw}{0.4906\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.0808\commtikz@hw}{0.4680\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.0662\commtikz@hw}{0.4853\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.0515\commtikz@hw}{0.4180\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.0369\commtikz@hw}{0.4176\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.0223\commtikz@hw}{0.3142\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.0076\commtikz@hw}{0.2884\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{0.0070\commtikz@hw}{0.1030\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{0.0217\commtikz@hw}{-0.1308\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{0.0363\commtikz@hw}{-0.3187\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{0.0510\commtikz@hw}{-0.3051\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{0.0656\commtikz@hw}{-0.3561\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{0.0803\commtikz@hw}{-0.3336\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{0.0949\commtikz@hw}{-0.3910\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{0.1096\commtikz@hw}{-0.3516\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{0.1242\commtikz@hw}{-0.4129\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{0.1389\commtikz@hw}{-0.3853\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{0.1535\commtikz@hw}{-0.4366\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{0.1682\commtikz@hw}{-0.3958\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{0.1828\commtikz@hw}{-0.4491\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{0.1975\commtikz@hw}{-0.4147\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{0.2121\commtikz@hw}{-0.4616\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{0.2268\commtikz@hw}{-0.4258\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{0.2414\commtikz@hw}{-0.4796\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{0.2561\commtikz@hw}{-0.4420\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{0.2707\commtikz@hw}{-0.4873\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{0.2854\commtikz@hw}{-0.4524\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{0.3000\commtikz@hw}{-0.5000\commtikz@hh}}%
+    \pgfusepath{stroke}%
+  \endpgfscope
+}
+
+% ==============================================================================
+% Helper: Arbitrary Waveform Trace (AWG)
+% ==============================================================================
+\def\commtikz@drawawgtrace{%
+  \pgfscope
+    \pgfsetlinewidth{\pgfkeysvalueof{/tikz/commtikz/inner line width}}%
+    \pgfsetroundjoin
+    \pgfsetroundcap
+    \pgfpathmoveto{\pgfpoint{-0.7400\commtikz@hw}{0.0000\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.7259\commtikz@hw}{0.2842\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.7119\commtikz@hw}{0.4823\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.6978\commtikz@hw}{0.5390\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.6838\commtikz@hw}{0.4490\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.6697\commtikz@hw}{0.2572\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.6557\commtikz@hw}{0.0407\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.6416\commtikz@hw}{-0.1208\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.6276\commtikz@hw}{-0.1750\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.6135\commtikz@hw}{-0.1151\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.5995\commtikz@hw}{0.0201\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.5854\commtikz@hw}{0.1638\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.5714\commtikz@hw}{0.2489\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.5573\commtikz@hw}{0.2358\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.5432\commtikz@hw}{0.1272\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.5292\commtikz@hw}{-0.0332\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.5151\commtikz@hw}{-0.1801\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.5011\commtikz@hw}{-0.2537\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.4870\commtikz@hw}{-0.2253\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.4730\commtikz@hw}{-0.1099\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.4589\commtikz@hw}{0.0391\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.4449\commtikz@hw}{0.1512\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.4308\commtikz@hw}{0.1677\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.4168\commtikz@hw}{0.0670\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.4027\commtikz@hw}{-0.1248\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.3886\commtikz@hw}{-0.3416\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.3746\commtikz@hw}{-0.5007\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.3605\commtikz@hw}{-0.5348\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.3465\commtikz@hw}{-0.4179\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.3324\commtikz@hw}{-0.1764\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.3184\commtikz@hw}{0.1188\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.3043\commtikz@hw}{0.3778\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.2903\commtikz@hw}{0.5234\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.2762\commtikz@hw}{0.5191\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.2622\commtikz@hw}{0.3806\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.2481\commtikz@hw}{0.1688\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.2341\commtikz@hw}{-0.0343\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.2200\commtikz@hw}{-0.1568\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.2059\commtikz@hw}{-0.1635\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.1919\commtikz@hw}{-0.0667\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.1778\commtikz@hw}{0.0806\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.1638\commtikz@hw}{0.2079\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.1497\commtikz@hw}{0.2563\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.1357\commtikz@hw}{0.2022\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.1216\commtikz@hw}{0.0658\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.1076\commtikz@hw}{-0.0974\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.0935\commtikz@hw}{-0.2208\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.0795\commtikz@hw}{-0.2547\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.0654\commtikz@hw}{-0.1873\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.0514\commtikz@hw}{-0.0505\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.0373\commtikz@hw}{0.0922\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.0232\commtikz@hw}{0.1715\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.0092\commtikz@hw}{0.1411\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{0.0049\commtikz@hw}{-0.0018\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{0.0189\commtikz@hw}{-0.2131\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{0.0330\commtikz@hw}{-0.4166\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{0.0470\commtikz@hw}{-0.5319\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{0.0611\commtikz@hw}{-0.5059\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{0.0751\commtikz@hw}{-0.3331\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{0.0892\commtikz@hw}{-0.0598\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{0.1032\commtikz@hw}{0.2317\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{0.1173\commtikz@hw}{0.4528\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{0.1314\commtikz@hw}{0.5400\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{0.1454\commtikz@hw}{0.4772\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{0.1595\commtikz@hw}{0.3002\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{0.1735\commtikz@hw}{0.0819\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{0.1876\commtikz@hw}{-0.0960\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{0.2016\commtikz@hw}{-0.1738\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{0.2157\commtikz@hw}{-0.1349\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{0.2297\commtikz@hw}{-0.0099\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{0.2438\commtikz@hw}{0.1378\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{0.2578\commtikz@hw}{0.2391\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{0.2719\commtikz@hw}{0.2468\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{0.2859\commtikz@hw}{0.1550\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{0.3000\commtikz@hw}{0.0000\commtikz@hh}}%
+    \pgfusepath{stroke}%
+  \endpgfscope
+}
+
+% ==============================================================================
+% Helper: Oscilloscope Time-Domain Trace (OSC / Scope / DSO)
+% ==============================================================================
+\def\commtikz@drawscopetrace{%
+  \pgfscope
+    \pgfsetlinewidth{\pgfkeysvalueof{/tikz/commtikz/inner line width}}%
+    \pgfsetroundjoin
+    \pgfsetroundcap
+    \pgfpathmoveto{\pgfpoint{-0.7400\commtikz@hw}{0.0319\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.7254\commtikz@hw}{0.1851\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.7107\commtikz@hw}{0.2079\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.6961\commtikz@hw}{0.4272\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.6814\commtikz@hw}{0.3701\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.6668\commtikz@hw}{0.4655\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.6521\commtikz@hw}{0.3607\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.6375\commtikz@hw}{0.4025\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.6228\commtikz@hw}{0.2188\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.6082\commtikz@hw}{0.1835\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.5935\commtikz@hw}{0.0531\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.5789\commtikz@hw}{-0.0756\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.5642\commtikz@hw}{-0.2482\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.5496\commtikz@hw}{-0.2856\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.5349\commtikz@hw}{-0.3361\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.5203\commtikz@hw}{-0.4967\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.5056\commtikz@hw}{-0.4245\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.4910\commtikz@hw}{-0.3057\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.4763\commtikz@hw}{-0.2503\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.4617\commtikz@hw}{-0.1790\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.4470\commtikz@hw}{-0.0682\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.4324\commtikz@hw}{0.1645\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.4177\commtikz@hw}{0.1606\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.4031\commtikz@hw}{0.3669\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.3885\commtikz@hw}{0.4532\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.3738\commtikz@hw}{0.3860\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.3592\commtikz@hw}{0.4053\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.3445\commtikz@hw}{0.3551\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.3299\commtikz@hw}{0.3069\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.3152\commtikz@hw}{0.1684\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.3006\commtikz@hw}{0.1173\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.2859\commtikz@hw}{-0.0138\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.2713\commtikz@hw}{-0.2334\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.2566\commtikz@hw}{-0.2553\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.2420\commtikz@hw}{-0.4579\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.2273\commtikz@hw}{-0.4952\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.2127\commtikz@hw}{-0.4100\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.1980\commtikz@hw}{-0.3485\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.1834\commtikz@hw}{-0.2667\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.1687\commtikz@hw}{-0.1320\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.1541\commtikz@hw}{-0.0235\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.1394\commtikz@hw}{0.0232\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.1248\commtikz@hw}{0.2248\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.1101\commtikz@hw}{0.3643\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.0955\commtikz@hw}{0.3233\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.0808\commtikz@hw}{0.4305\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.0662\commtikz@hw}{0.3855\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.0515\commtikz@hw}{0.3482\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.0369\commtikz@hw}{0.3248\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.0223\commtikz@hw}{0.2484\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.0076\commtikz@hw}{0.1676\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{0.0070\commtikz@hw}{-0.0942\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{0.0217\commtikz@hw}{-0.1698\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{0.0363\commtikz@hw}{-0.2115\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{0.0510\commtikz@hw}{-0.3346\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{0.0656\commtikz@hw}{-0.4222\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{0.0803\commtikz@hw}{-0.4776\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{0.0949\commtikz@hw}{-0.3896\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{0.1096\commtikz@hw}{-0.3764\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{0.1242\commtikz@hw}{-0.2178\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{0.1389\commtikz@hw}{-0.0931\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{0.1535\commtikz@hw}{0.0032\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{0.1682\commtikz@hw}{0.1967\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{0.1828\commtikz@hw}{0.2566\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{0.1975\commtikz@hw}{0.3591\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{0.2121\commtikz@hw}{0.4717\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{0.2268\commtikz@hw}{0.4025\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{0.2414\commtikz@hw}{0.3688\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{0.2561\commtikz@hw}{0.3637\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{0.2707\commtikz@hw}{0.2457\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{0.2854\commtikz@hw}{0.1902\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{0.3000\commtikz@hw}{-0.0377\commtikz@hh}}%
+    \pgfusepath{stroke}%
+  \endpgfscope
+}
+
+% ==============================================================================
+% 1. OSA / ESA (Optical / Electrical Spectrum Analyzer)
+% ==============================================================================
+\pgfdeclareshape{commtikz_osa}{
+  \commtikz@inheritrectanchors{commrect}
+  \inheritbackgroundpath[from=commrect]
+
+  \beforebackgroundpath{%
+    \commtikz@rectparams
+    \commtikz@drawinstscreen
+    \commtikz@drawosatrace
+    \commtikz@drawcomplabel{0.67\commtikz@hw}{0pt}%
+  }
+}
+
+% ==============================================================================
+% 2. AWG (Arbitrary Waveform Generator)
+% ==============================================================================
+\pgfdeclareshape{commtikz_awg}{
+  \commtikz@inheritrectanchors{commrect}
+  \inheritbackgroundpath[from=commrect]
+
+  \beforebackgroundpath{%
+    \commtikz@rectparams
+    \commtikz@drawinstscreen
+    \commtikz@drawawgtrace
+    \commtikz@drawcomplabel{0.67\commtikz@hw}{0pt}%
+  }
+}
+
+% ==============================================================================
+% 3. OSC / Scope / DSO (Digital Storage Oscilloscope)
+% ==============================================================================
+\pgfdeclareshape{commtikz_scope}{
+  \commtikz@inheritrectanchors{commrect}
+  \inheritbackgroundpath[from=commrect]
+
+  \beforebackgroundpath{%
+    \commtikz@rectparams
+    \commtikz@drawinstscreen
+    \commtikz@drawscopetrace
+    \commtikz@drawcomplabel{0.67\commtikz@hw}{0pt}%
+  }
+}
+
+% ==============================================================================
+% 4. User-facing TikZ Styles for Instruments
+% ==============================================================================
+\tikzset{
+  osa/.style={shape=commtikz_osa, commtikz base node, width=1.55, height=0.95},
+  esa/.style={shape=commtikz_osa, commtikz base node, width=1.55, height=0.95},
+  awg/.style={shape=commtikz_awg, commtikz base node, width=1.55, height=0.95},
+  osc/.style={shape=commtikz_scope, commtikz base node, width=1.55, height=0.95},
+  scope/.style={osc, #1},
+  scope/.default={},
+  dso/.style={osc, #1},
+  dso/.default={},
+}
+\endinput

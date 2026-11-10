@@ -1,0 +1,940 @@
+%% tikzlibrarycommtikz.optical.code.tex
+%% Optical and electro-optical schematic components.
+
+% ==============================================================================
+% 1. CouplerCirc (Elliptical 2x2 / 1x2 optical coupler)
+% ==============================================================================
+\pgfdeclareshape{commtikz_couplercirc}{
+  \commtikz@inheritrectanchors{commrect}
+
+  \anchorborder{%
+    \pgf@xa=\pgf@x\relax
+    \pgf@ya=\pgf@y\relax
+    \commtikz@rectparams
+    \pgfpointborderellipse{\pgfpoint{\pgf@xa}{\pgf@ya}}{\pgfpoint{\commtikz@hw}{\commtikz@hh}}%
+  }
+
+  \backgroundpath{%
+    \commtikz@rectparams
+    \pgfpathellipse{\pgfpointorigin}{\pgfpoint{\commtikz@hw}{0pt}}{\pgfpoint{0pt}{\commtikz@hh}}%
+  }
+}
+
+% ==============================================================================
+% 2. Beam Splitter (BS) and Polarizing Beam Splitter (PBS)
+% ==============================================================================
+\pgfdeclareshape{commtikz_bs}{
+  \commtikz@inheritrectanchors{commrect}
+  \inheritbackgroundpath[from=commrect]
+
+  \beforebackgroundpath{%
+    \commtikz@rectparams
+    \ifnum\pgfkeysvalueof{/tikz/commtikz/flip}=1\relax
+      \pgfpathmoveto{\pgfpoint{-\commtikz@hw}{-\commtikz@hh}}%
+      \pgfpathlineto{\pgfpoint{\commtikz@hw}{\commtikz@hh}}%
+    \else
+      \pgfpathmoveto{\pgfpoint{-\commtikz@hw}{\commtikz@hh}}%
+      \pgfpathlineto{\pgfpoint{\commtikz@hw}{-\commtikz@hh}}%
+    \fi
+    \pgfusepath{stroke}%
+    \commtikz@drawcomplabel{0pt}{0pt}%
+  }
+}
+
+\pgfdeclareshape{commtikz_pbs}{
+  \commtikz@inheritrectanchors{commrect}
+  \inheritbackgroundpath[from=commrect]
+
+  \beforebackgroundpath{%
+    \commtikz@rectparams
+    \ifnum\pgfkeysvalueof{/tikz/commtikz/flip}=1\relax
+      \pgfpathmoveto{\pgfpoint{-\commtikz@hw}{-\commtikz@hh}}%
+      \pgfpathlineto{\pgfpoint{\commtikz@hw}{\commtikz@hh}}%
+    \else
+      \pgfpathmoveto{\pgfpoint{-\commtikz@hw}{\commtikz@hh}}%
+      \pgfpathlineto{\pgfpoint{\commtikz@hw}{-\commtikz@hh}}%
+    \fi
+    \pgfusepath{stroke}%
+    % s-pol dot in lower-left triangle
+    \pgfscope
+      \commtikz@use@strokecolor@as@fill
+      \pgfpathcircle{\pgfpoint{-0.35\commtikz@hw}{-0.35\commtikz@hh}}{0.09\commtikz@hw}%
+      \pgfusepath{fill}%
+    \endpgfscope
+    % p-pol bar in upper-right triangle
+    \pgfpathmoveto{\pgfpoint{0.18\commtikz@hw}{0.52\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{0.52\commtikz@hw}{0.18\commtikz@hh}}%
+    \pgfusepath{stroke}%
+  }
+}
+
+% ==============================================================================
+% 3. Mirror (Thick optical mirror with black coated back)
+% ==============================================================================
+\pgfdeclareshape{commtikz_mirror}{
+  \commtikz@inheritrectanchors{commrect}
+  \inheritbackgroundpath[from=commrect]
+
+  \beforebackgroundpath{%
+    \commtikz@rectparams
+    \pgfscope
+      \commtikz@use@strokecolor@as@fill
+      \ifnum\pgfkeysvalueof{/tikz/commtikz/flip}=1\relax
+        \pgfpathrectanglecorners{\pgfpoint{-\commtikz@hw}{-\commtikz@hh}}{\pgfpoint{-0.3333\commtikz@hw}{\commtikz@hh}}%
+      \else
+        \pgfpathrectanglecorners{\pgfpoint{0.3333\commtikz@hw}{-\commtikz@hh}}{\pgfpoint{\commtikz@hw}{\commtikz@hh}}%
+      \fi
+      \pgfusepath{fill,stroke}%
+    \endpgfscope
+  }
+}
+
+% ==============================================================================
+% 4. FiberSpool (Bare 3-loop inline fiber spool connecting directly to fiber)
+% ==============================================================================
+\pgfdeclareshape{commtikz_fiberspool}{
+  \commtikz@inheritrectanchors{commrect}
+
+  \anchor{in}{\commtikz@rectparams\pgfpoint{-\commtikz@hw}{0pt}}
+  \anchor{out}{\commtikz@rectparams\pgfpoint{\commtikz@hw}{0pt}}
+  \anchor{W0}{\commtikz@rectparams\pgfpoint{-\commtikz@hw}{0pt}}
+  \anchor{E0}{\commtikz@rectparams\pgfpoint{\commtikz@hw}{0pt}}
+  \anchor{west}{\commtikz@rectparams\pgfpoint{-\commtikz@hw}{0pt}}
+  \anchor{east}{\commtikz@rectparams\pgfpoint{\commtikz@hw}{0pt}}
+  \anchor{north}{\commtikz@rectparams\pgfpoint{0pt}{1.05\commtikz@hh}}
+  \anchor{N0}{\commtikz@rectparams\pgfpoint{0pt}{1.05\commtikz@hh}}
+  \anchor{south}{\commtikz@rectparams\pgfpoint{0pt}{-0.15\commtikz@hh}}
+  \anchor{S0}{\commtikz@rectparams\pgfpoint{0pt}{-0.15\commtikz@hh}}
+
+  \backgroundpath{%
+    \commtikz@rectparams
+    \pgfmathsetlength\commtikz@fr{0.50 * \commtikz@hh}%
+    \pgfmathsetlength\commtikz@fdx{0.25 * \commtikz@hw}%
+    % Baseline segment along y=0pt connecting directly to incoming/outgoing fiber
+    \pgfpathmoveto{\pgfpoint{-\commtikz@hw}{0pt}}%
+    \pgfpathlineto{\pgfpoint{\commtikz@hw}{0pt}}%
+    % 3 overlapping circular fiber loops tangent to y=0pt
+    \pgfpathcircle{\pgfpoint{-\commtikz@fdx}{\commtikz@fr}}{\commtikz@fr}%
+    \pgfpathcircle{\pgfpoint{0pt}{\commtikz@fr}}{\commtikz@fr}%
+    \pgfpathcircle{\pgfpoint{\commtikz@fdx}{\commtikz@fr}}{\commtikz@fr}%
+    \pgfusepath{stroke}%
+  }
+}
+
+% ==============================================================================
+% 5. PolCtrl (Polarization Controller: 3 filled black circles centered vertically)
+% ==============================================================================
+\pgfdeclareshape{commtikz_polctrl}{
+  \commtikz@inheritrectanchors{commrect}
+  \inheritbackgroundpath[from=commrect]
+
+  \beforebackgroundpath{%
+    \commtikz@rectparams
+    \pgfmathsetlength\commtikz@pcr{0.20 * \commtikz@hh}%
+    \pgfmathsetlength\commtikz@pcdx{0.50 * \commtikz@hw}%
+    \pgfscope
+      \commtikz@use@strokecolor@as@fill
+      \pgfpathcircle{\pgfpoint{-\commtikz@pcdx}{0pt}}{\commtikz@pcr}%
+      \pgfpathcircle{\pgfpoint{0pt}{0pt}}{\commtikz@pcr}%
+      \pgfpathcircle{\pgfpoint{\commtikz@pcdx}{0pt}}{\commtikz@pcr}%
+      \pgfusepath{fill,stroke}%
+    \endpgfscope
+    \commtikz@drawcomplabel{0pt}{0pt}%
+  }
+}
+
+% ==============================================================================
+% 6. VOA (Variable Optical Attenuator)
+% ==============================================================================
+\pgfdeclareshape{commtikz_voa}{
+  \commtikz@inheritrectanchors{commrect}
+  \inheritbackgroundpath[from=commrect]
+
+  \beforebackgroundpath{%
+    \commtikz@rectparams
+    \pgfmathsetlength\commtikz@voar{0.6667 * \commtikz@hw}%
+    \pgfpathcircle{\pgfpointorigin}{\commtikz@voar}%
+    \pgfusepath{stroke}%
+    \commtikz@drawarrow{-0.82\commtikz@hw}{-0.82\commtikz@hh}{0.90\commtikz@hw}{0.90\commtikz@hh}{0.14\commtikz@u}{0.10\commtikz@u}%
+    \commtikz@drawcomplabel{0pt}{0pt}%
+  }
+}
+
+% ==============================================================================
+% 7. PM (Optical Phase Modulator: waveguide + parallel RF electrodes)
+% ==============================================================================
+\pgfdeclareshape{commtikz_pm}{
+  \commtikz@inheritrectanchors{commrect}
+  \inheritbackgroundpath[from=commrect]
+
+  \beforebackgroundpath{%
+    \commtikz@rectparams
+    % Straight optical waveguide from -hw to +hw
+    \pgfpathmoveto{\pgfpoint{-\commtikz@hw}{0pt}}%
+    \pgfpathlineto{\pgfpoint{\commtikz@hw}{0pt}}%
+    \pgfusepath{stroke}%
+    % Simplistic parallel RF modulation electrodes above and below waveguide
+    \pgfscope
+      \commtikz@use@strokecolor@as@fill
+      \pgfpathrectanglecorners{\pgfpoint{-0.48\commtikz@hw}{0.18\commtikz@hh}}{\pgfpoint{0.48\commtikz@hw}{0.32\commtikz@hh}}%
+      \pgfpathrectanglecorners{\pgfpoint{-0.48\commtikz@hw}{-0.32\commtikz@hh}}{\pgfpoint{0.48\commtikz@hw}{-0.18\commtikz@hh}}%
+      \pgfusepath{fill}%
+    \endpgfscope
+    \commtikz@drawcomplabel{0pt}{0pt}%
+  }
+}
+
+% ==============================================================================
+% 8. MZM (Mach-Zehnder Modulator: interferometer arms + RF electrodes)
+% ==============================================================================
+\pgfdeclareshape{commtikz_mzm}{
+  \commtikz@inheritrectanchors{commrect}
+  \inheritbackgroundpath[from=commrect]
+
+  \beforebackgroundpath{%
+    \commtikz@rectparams
+    \pgfmathsetlength\commtikz@xa{-\commtikz@hw}%
+    \pgfmathsetlength\commtikz@xb{-0.80 * \commtikz@hw}%
+    \pgfmathsetlength\commtikz@xc{-0.46 * \commtikz@hw}%
+    \pgfmathsetlength\commtikz@xd{0.46 * \commtikz@hw}%
+    \pgfmathsetlength\commtikz@xe{0.80 * \commtikz@hw}%
+    \pgfmathsetlength\commtikz@xf{\commtikz@hw}%
+    \pgfmathsetlength\commtikz@ya{0.54 * \commtikz@hh}%
+    % Input lead
+    \pgfpathmoveto{\pgfpoint{\commtikz@xa}{0pt}}%
+    \pgfpathlineto{\pgfpoint{\commtikz@xb}{0pt}}%
+    % MZI interferometer arms
+    \pgfpathmoveto{\pgfpoint{\commtikz@xb}{0pt}}%
+    \pgfpathlineto{\pgfpoint{\commtikz@xc}{\commtikz@ya}}%
+    \pgfpathlineto{\pgfpoint{\commtikz@xd}{\commtikz@ya}}%
+    \pgfpathlineto{\pgfpoint{\commtikz@xe}{0pt}}%
+    \pgfpathlineto{\pgfpoint{\commtikz@xd}{-\commtikz@ya}}%
+    \pgfpathlineto{\pgfpoint{\commtikz@xc}{-\commtikz@ya}}%
+    \pgfpathclose
+    % Output lead
+    \pgfpathmoveto{\pgfpoint{\commtikz@xe}{0pt}}%
+    \pgfpathlineto{\pgfpoint{\commtikz@xf}{0pt}}%
+    \pgfusepath{stroke}%
+    % Simplistic GSG RF modulation electrodes along the MZI arms
+    \pgfscope
+      \commtikz@use@strokecolor@as@fill
+      % Center signal electrode between the two arms
+      \pgfpathrectanglecorners{\pgfpoint{-0.38\commtikz@hw}{-0.10\commtikz@hh}}{\pgfpoint{0.38\commtikz@hw}{0.10\commtikz@hh}}%
+      % Outer ground electrodes above and below the two arms
+      \pgfpathrectanglecorners{\pgfpoint{-0.38\commtikz@hw}{0.68\commtikz@hh}}{\pgfpoint{0.38\commtikz@hw}{0.80\commtikz@hh}}%
+      \pgfpathrectanglecorners{\pgfpoint{-0.38\commtikz@hw}{-0.80\commtikz@hh}}{\pgfpoint{0.38\commtikz@hw}{-0.68\commtikz@hh}}%
+      \pgfusepath{fill}%
+    \endpgfscope
+    \commtikz@drawcomplabel{0pt}{0pt}%
+  }
+}
+
+% ==============================================================================
+% 9. IQM (Dual-Parallel Mach-Zehnder IQ Modulator with 3-electrode MZMs & 90-deg pad)
+% ==============================================================================
+\pgfdeclareshape{commtikz_iqm}{
+  \commtikz@inheritrectanchors{commrect}
+  \inheritbackgroundpath[from=commrect]
+
+  \beforebackgroundpath{%
+    \commtikz@rectparams
+    \pgfmathsetlength\commtikz@yM{0.500 * \commtikz@hh}%
+    \pgfmathsetlength\commtikz@yH{0.700 * \commtikz@hh}%
+    \pgfmathsetlength\commtikz@yL{0.300 * \commtikz@hh}%
+    % Main input lead and left Y-splitter
+    \pgfpathmoveto{\pgfpoint{-\commtikz@hw}{0pt}}%
+    \pgfpathlineto{\pgfpoint{-0.88\commtikz@hw}{0pt}}%
+    \pgfpathlineto{\pgfpoint{-0.70\commtikz@hw}{\commtikz@yM}}%
+    \pgfpathlineto{\pgfpoint{-0.60\commtikz@hw}{\commtikz@yM}}%
+    \pgfpathmoveto{\pgfpoint{-0.88\commtikz@hw}{0pt}}%
+    \pgfpathlineto{\pgfpoint{-0.70\commtikz@hw}{-\commtikz@yM}}%
+    \pgfpathlineto{\pgfpoint{-0.60\commtikz@hw}{-\commtikz@yM}}%
+    % Upper MZM (I) spanning x in [-0.60*hw, +0.22*hw] (parallel arms in [-0.42*hw, +0.04*hw])
+    \pgfpathmoveto{\pgfpoint{-0.60\commtikz@hw}{\commtikz@yM}}%
+    \pgfpathlineto{\pgfpoint{-0.42\commtikz@hw}{\commtikz@yH}}%
+    \pgfpathlineto{\pgfpoint{0.04\commtikz@hw}{\commtikz@yH}}%
+    \pgfpathlineto{\pgfpoint{0.22\commtikz@hw}{\commtikz@yM}}%
+    \pgfpathlineto{\pgfpoint{0.04\commtikz@hw}{\commtikz@yL}}%
+    \pgfpathlineto{\pgfpoint{-0.42\commtikz@hw}{\commtikz@yL}}%
+    \pgfpathclose
+    % Lower MZM (Q) spanning x in [-0.60*hw, +0.22*hw] (parallel arms in [-0.42*hw, +0.04*hw])
+    \pgfpathmoveto{\pgfpoint{-0.60\commtikz@hw}{-\commtikz@yM}}%
+    \pgfpathlineto{\pgfpoint{-0.42\commtikz@hw}{-\commtikz@yL}}%
+    \pgfpathlineto{\pgfpoint{0.04\commtikz@hw}{-\commtikz@yL}}%
+    \pgfpathlineto{\pgfpoint{0.22\commtikz@hw}{-\commtikz@yM}}%
+    \pgfpathlineto{\pgfpoint{0.04\commtikz@hw}{-\commtikz@yH}}%
+    \pgfpathlineto{\pgfpoint{-0.42\commtikz@hw}{-\commtikz@yH}}%
+    \pgfpathclose
+    % Output horizontal branches [+0.22*hw, +0.70*hw] and right Y-combiner
+    \pgfpathmoveto{\pgfpoint{0.22\commtikz@hw}{\commtikz@yM}}%
+    \pgfpathlineto{\pgfpoint{0.70\commtikz@hw}{\commtikz@yM}}%
+    \pgfpathlineto{\pgfpoint{0.88\commtikz@hw}{0pt}}%
+    \pgfpathlineto{\pgfpoint{\commtikz@hw}{0pt}}%
+    \pgfpathmoveto{\pgfpoint{0.22\commtikz@hw}{-\commtikz@yM}}%
+    \pgfpathlineto{\pgfpoint{0.70\commtikz@hw}{-\commtikz@yM}}%
+    \pgfpathlineto{\pgfpoint{0.88\commtikz@hw}{0pt}}%
+    \pgfusepath{stroke}%
+    % GSG 3-electrode structure on both upper (I) and lower (Q) MZMs + 90-deg pad on Q branch
+    \pgfscope
+      \commtikz@use@strokecolor@as@fill
+      % Upper MZM (I) 3 electrodes (center signal + top/bottom ground)
+      \pgfpathrectanglecorners{\pgfpoint{-0.38\commtikz@hw}{0.460\commtikz@hh}}{\pgfpoint{0.00\commtikz@hw}{0.540\commtikz@hh}}%
+      \pgfpathrectanglecorners{\pgfpoint{-0.38\commtikz@hw}{0.775\commtikz@hh}}{\pgfpoint{0.00\commtikz@hw}{0.845\commtikz@hh}}%
+      \pgfpathrectanglecorners{\pgfpoint{-0.38\commtikz@hw}{0.155\commtikz@hh}}{\pgfpoint{0.00\commtikz@hw}{0.225\commtikz@hh}}%
+      % Lower MZM (Q) 3 electrodes (center signal + top/bottom ground)
+      \pgfpathrectanglecorners{\pgfpoint{-0.38\commtikz@hw}{-0.540\commtikz@hh}}{\pgfpoint{0.00\commtikz@hw}{-0.460\commtikz@hh}}%
+      \pgfpathrectanglecorners{\pgfpoint{-0.38\commtikz@hw}{-0.225\commtikz@hh}}{\pgfpoint{0.00\commtikz@hw}{-0.155\commtikz@hh}}%
+      \pgfpathrectanglecorners{\pgfpoint{-0.38\commtikz@hw}{-0.845\commtikz@hh}}{\pgfpoint{0.00\commtikz@hw}{-0.775\commtikz@hh}}%
+      % Quadrature 90-deg phase-shifter pad centered freely on lower output branch [0.22*hw, 0.70*hw]
+      \pgfpathrectanglecorners{\pgfpoint{0.36\commtikz@hw}{-0.59\commtikz@hh}}{\pgfpoint{0.56\commtikz@hw}{-0.41\commtikz@hh}}%
+      \pgfusepath{fill}%
+    \endpgfscope
+  }
+}
+
+% ==============================================================================
+% 10. PD (Photodetector) and BPD (Balanced Photodetector)
+% ==============================================================================
+\pgfdeclareshape{commtikz_pd}{
+  \commtikz@inheritrectanchors{commrect}
+  \inheritbackgroundpath[from=commrect]
+
+  \beforebackgroundpath{%
+    \commtikz@rectparams
+    % Bottom lead: (0, -0.8*hh) to (0, -0.4*hh)
+    \pgfpathmoveto{\pgfpoint{0pt}{-0.80\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{0pt}{-0.40\commtikz@hh}}%
+    % Cathode bar: (-0.6*hw, +0.3*hh) to (+0.6*hw, +0.3*hh)
+    \pgfpathmoveto{\pgfpoint{-0.60\commtikz@hw}{0.30\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{0.60\commtikz@hw}{0.30\commtikz@hh}}%
+    % Top lead: (0, +0.3*hh) to (0, +0.8*hh)
+    \pgfpathmoveto{\pgfpoint{0pt}{0.30\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{0pt}{0.80\commtikz@hh}}%
+    \pgfusepath{stroke}%
+    % Filled diode triangle
+    \pgfscope
+      \commtikz@use@strokecolor@as@fill
+      \pgfpathmoveto{\pgfpoint{-0.60\commtikz@hw}{-0.40\commtikz@hh}}%
+      \pgfpathlineto{\pgfpoint{0pt}{0.30\commtikz@hh}}%
+      \pgfpathlineto{\pgfpoint{0.60\commtikz@hw}{-0.40\commtikz@hh}}%
+      \pgfpathclose
+      \pgfusepath{fill,stroke}%
+    \endpgfscope
+  }
+}
+
+\pgfdeclareshape{commtikz_bpd}{
+  \commtikz@inheritrectanchors{commrect}
+  \inheritbackgroundpath[from=commrect]
+
+  \anchor{in 1}{\csname pgf@anchor@commtikz_bpd@W0\endcsname}
+  \anchor{in 2}{\csname pgf@anchor@commtikz_bpd@W1\endcsname}
+
+  \beforebackgroundpath{%
+    \commtikz@rectparams
+    % Two series photodiodes inside a balanced receiver block
+    % Lower diode: anode at -0.64*hh, cathode at -0.20*hh
+    % Upper diode: anode at +0.20*hh, cathode at +0.64*hh
+    % Midpoint tap at y=0 to East port (+0.82*hw, 0)
+    \pgfpathmoveto{\pgfpoint{0pt}{-0.84\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{0pt}{0.84\commtikz@hh}}%
+    % Cathode bars
+    \pgfpathmoveto{\pgfpoint{-0.38\commtikz@hw}{-0.20\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{0.38\commtikz@hw}{-0.20\commtikz@hh}}%
+    \pgfpathmoveto{\pgfpoint{-0.38\commtikz@hw}{0.64\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{0.38\commtikz@hw}{0.64\commtikz@hh}}%
+    % Center tap to RF output
+    \pgfpathmoveto{\pgfpoint{0pt}{0pt}}%
+    \pgfpathlineto{\pgfpoint{0.82\commtikz@hw}{0pt}}%
+    \pgfusepath{stroke}%
+    % Filled diode triangles
+    \pgfscope
+      \commtikz@use@strokecolor@as@fill
+      % Lower diode triangle
+      \pgfpathmoveto{\pgfpoint{-0.38\commtikz@hw}{-0.64\commtikz@hh}}%
+      \pgfpathlineto{\pgfpoint{0pt}{-0.20\commtikz@hh}}%
+      \pgfpathlineto{\pgfpoint{0.38\commtikz@hw}{-0.64\commtikz@hh}}%
+      \pgfpathclose
+      % Upper diode triangle
+      \pgfpathmoveto{\pgfpoint{-0.38\commtikz@hw}{0.20\commtikz@hh}}%
+      \pgfpathlineto{\pgfpoint{0pt}{0.64\commtikz@hh}}%
+      \pgfpathlineto{\pgfpoint{0.38\commtikz@hw}{0.20\commtikz@hh}}%
+      \pgfpathclose
+      \pgfusepath{fill,stroke}%
+      % Junction dot at center tap
+      \pgfpathcircle{\pgfpointorigin}{0.07\commtikz@hw}%
+      \pgfusepath{fill}%
+    \endpgfscope
+  }
+}
+
+% ==============================================================================
+% 11. LD (Laser Diode)
+% ==============================================================================
+\pgfdeclareshape{commtikz_ld}{
+  \commtikz@inheritrectanchors{commrect}
+  \inheritbackgroundpath[from=commrect]
+
+  \beforebackgroundpath{%
+    \commtikz@rectparams
+    % Left lead: (-0.8*hw, 0) to (-0.4*hw, 0)
+    \pgfpathmoveto{\pgfpoint{-0.80\commtikz@hw}{0pt}}%
+    \pgfpathlineto{\pgfpoint{-0.40\commtikz@hw}{0pt}}%
+    % Cathode bar: (+0.4*hw, -0.44*hh) to (+0.4*hw, +0.44*hh)
+    \pgfpathmoveto{\pgfpoint{0.40\commtikz@hw}{-0.44\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{0.40\commtikz@hw}{0.44\commtikz@hh}}%
+    % Right lead: (+0.4*hw, 0) to (+0.8*hw, 0)
+    \pgfpathmoveto{\pgfpoint{0.40\commtikz@hw}{0pt}}%
+    \pgfpathlineto{\pgfpoint{0.80\commtikz@hw}{0pt}}%
+    \pgfusepath{stroke}%
+    % Filled diode triangle
+    \pgfscope
+      \commtikz@use@strokecolor@as@fill
+      \pgfpathmoveto{\pgfpoint{-0.40\commtikz@hw}{0.44\commtikz@hh}}%
+      \pgfpathlineto{\pgfpoint{-0.40\commtikz@hw}{-0.44\commtikz@hh}}%
+      \pgfpathlineto{\pgfpoint{0.40\commtikz@hw}{0pt}}%
+      \pgfpathclose
+      \pgfusepath{fill,stroke}%
+    \endpgfscope
+    % Two optical emission arrows
+    \commtikz@drawarrow{-0.14\commtikz@hw}{0.48\commtikz@hh}{0.193\commtikz@hw}{0.88\commtikz@hh}{0.14\commtikz@u}{0.085\commtikz@u}%
+    \commtikz@drawarrow{0pt}{0.34\commtikz@hh}{0.333\commtikz@hw}{0.74\commtikz@hh}{0.14\commtikz@u}{0.085\commtikz@u}%
+  }
+}
+
+% ==============================================================================
+% 12. MUX / DEMUX (Trapezoidal Optical Multiplexer / Demultiplexer)
+% ==============================================================================
+\def\commtikz@defmuxportanchors{%
+  \pgfutil@for\commtikz@idx:=0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15\do{%
+    \expandafter\commtikz@defmuxportanchor@i\expandafter{\commtikz@idx}%
+  }%
+}
+
+\def\commtikz@defmuxportanchor@i#1{%
+  \anchor{W#1}{%
+    \commtikz@muxparams
+    \pgf@x=-\commtikz@hw\relax
+    \pgfmathsetlength\pgf@y{\commtikz@portorder * (\commtikz@hhW - (#1 + 1) * (2 * \commtikz@hhW) / (\commtikz@numW + 1))}%
+  }%
+  \anchor{E#1}{%
+    \commtikz@muxparams
+    \pgf@x=\commtikz@hw\relax
+    \pgfmathsetlength\pgf@y{\commtikz@portorder * (\commtikz@hhE - (#1 + 1) * (2 * \commtikz@hhE) / (\commtikz@numE + 1))}%
+  }%
+  \anchor{N#1}{%
+    \commtikz@muxparams
+    \pgfmathsetmacro\commtikz@frac{(#1 + 1) / (\commtikz@numN + 1)}%
+    \pgfmathsetlength\pgf@x{-\commtikz@hw + \commtikz@frac * (2 * \commtikz@hw)}%
+    \pgfmathsetlength\pgf@y{\commtikz@hhW + \commtikz@frac * (\commtikz@hhE - \commtikz@hhW)}%
+  }%
+  \anchor{S#1}{%
+    \commtikz@muxparams
+    \pgfmathsetmacro\commtikz@frac{(#1 + 1) / (\commtikz@numS + 1)}%
+    \pgfmathsetlength\pgf@x{-\commtikz@hw + \commtikz@frac * (2 * \commtikz@hw)}%
+    \pgfmathsetlength\pgf@y{-\commtikz@hhW - \commtikz@frac * (\commtikz@hhE - \commtikz@hhW)}%
+  }%
+}
+
+\def\commtikz@muxparams{%
+  \commtikz@savedmux
+  \commtikz@u=\commtikz@saved@u\relax
+  \commtikz@hw=\commtikz@saved@hw\relax
+  \commtikz@hhW=\commtikz@saved@hhW\relax
+  \commtikz@hhE=\commtikz@saved@hhE\relax
+  \commtikz@hh=\commtikz@saved@hh\relax
+}
+
+\pgfdeclareshape{commtikz_mux}{
+  \savedmacro\commtikz@savedmux{%
+    \pgfmathsetlength\commtikz@u{\pgfkeysvalueof{/tikz/commtikz/unit}}%
+    \pgfmathparse{\pgfkeysvalueof{/tikz/commtikz/width}}%
+    \ifpgfmathunitsdeclared
+      \commtikz@hw=0.5\dimexpr\pgfmathresult pt\relax
+    \else
+      \commtikz@hw=0.5\dimexpr\pgfmathresult\commtikz@u\relax
+    \fi
+    \pgfmathparse{\pgfkeysvalueof{/tikz/commtikz/height1}}%
+    \ifpgfmathunitsdeclared
+      \commtikz@hha=0.5\dimexpr\pgfmathresult pt\relax
+    \else
+      \commtikz@hha=0.5\dimexpr\pgfmathresult\commtikz@u\relax
+    \fi
+    \pgfmathparse{\pgfkeysvalueof{/tikz/commtikz/height2}}%
+    \ifpgfmathunitsdeclared
+      \commtikz@hhb=0.5\dimexpr\pgfmathresult pt\relax
+    \else
+      \commtikz@hhb=0.5\dimexpr\pgfmathresult\commtikz@u\relax
+    \fi
+    \ifnum\pgfkeysvalueof{/tikz/commtikz/flip}=1\relax
+      \commtikz@hhW=\commtikz@hhb\relax
+      \commtikz@hhE=\commtikz@hha\relax
+    \else
+      \commtikz@hhW=\commtikz@hha\relax
+      \commtikz@hhE=\commtikz@hhb\relax
+    \fi
+    \commtikz@hh=0.5\dimexpr\commtikz@hhW + \commtikz@hhE\relax
+    \edef\commtikz@saved@u{\the\commtikz@u}%
+    \edef\commtikz@saved@hw{\the\commtikz@hw}%
+    \edef\commtikz@saved@hhW{\the\commtikz@hhW}%
+    \edef\commtikz@saved@hhE{\the\commtikz@hhE}%
+    \edef\commtikz@saved@hh{\the\commtikz@hh}%
+    \edef\commtikz@numN{\pgfkeysvalueof{/tikz/commtikz/numN}}%
+    \edef\commtikz@numS{\pgfkeysvalueof{/tikz/commtikz/numS}}%
+    \edef\commtikz@numE{\pgfkeysvalueof{/tikz/commtikz/numE}}%
+    \edef\commtikz@numW{\pgfkeysvalueof{/tikz/commtikz/numW}}%
+    \edef\commtikz@portorder{\pgfkeysvalueof{/tikz/commtikz/port order}}%
+    \addtosavedmacro\commtikz@saved@u
+    \addtosavedmacro\commtikz@saved@hw
+    \addtosavedmacro\commtikz@saved@hhW
+    \addtosavedmacro\commtikz@saved@hhE
+    \addtosavedmacro\commtikz@saved@hh
+    \addtosavedmacro\commtikz@numN
+    \addtosavedmacro\commtikz@numS
+    \addtosavedmacro\commtikz@numE
+    \addtosavedmacro\commtikz@numW
+    \addtosavedmacro\commtikz@portorder
+  }
+
+  \savedanchor\centerpoint{\pgfpointorigin}
+  \savedanchor\textpoint{%
+    \pgf@x=-0.5\wd\pgfnodeparttextbox\relax
+    \pgf@y=-0.5\ht\pgfnodeparttextbox\relax
+    \advance\pgf@y by 0.5\dp\pgfnodeparttextbox\relax
+  }
+
+  \anchor{center}{\centerpoint}
+  \anchor{text}{\textpoint}
+  \anchor{mid}{\pgfpointorigin}
+  \anchor{base}{\pgfpoint{0pt}{-0.5\ht\pgfnodeparttextbox}}
+
+  \anchor{west}{\commtikz@muxparams\pgfpoint{-\commtikz@hw}{0pt}}
+  \anchor{east}{\commtikz@muxparams\pgfpoint{\commtikz@hw}{0pt}}
+  \anchor{north}{\commtikz@muxparams\pgfpoint{0pt}{\commtikz@hh}}
+  \anchor{south}{\commtikz@muxparams\pgfpoint{0pt}{-\commtikz@hh}}
+  \anchor{north west}{\commtikz@muxparams\pgfpoint{-\commtikz@hw}{\commtikz@hhW}}
+  \anchor{south west}{\commtikz@muxparams\pgfpoint{-\commtikz@hw}{-\commtikz@hhW}}
+  \anchor{north east}{\commtikz@muxparams\pgfpoint{\commtikz@hw}{\commtikz@hhE}}
+  \anchor{south east}{\commtikz@muxparams\pgfpoint{\commtikz@hw}{-\commtikz@hhE}}
+
+  \anchor{W}{\commtikz@muxparams\pgfpoint{-\commtikz@hw}{0pt}}
+  \anchor{E}{\commtikz@muxparams\pgfpoint{\commtikz@hw}{0pt}}
+  \anchor{N}{\commtikz@muxparams\pgfpoint{0pt}{\commtikz@hh}}
+  \anchor{S}{\commtikz@muxparams\pgfpoint{0pt}{-\commtikz@hh}}
+  \anchor{in}{\commtikz@muxparams\pgfpoint{-\commtikz@hw}{0pt}}
+  \anchor{out}{\commtikz@muxparams\pgfpoint{\commtikz@hw}{0pt}}
+
+  \commtikz@defmuxportanchors
+
+  \anchorborder{%
+    \pgf@xa=\pgf@x\relax
+    \pgf@ya=\pgf@y\relax
+    \commtikz@muxparams
+    \pgfpointborderrectangle{\pgfpoint{\pgf@xa}{\pgf@ya}}{\pgfpoint{\commtikz@hw}{\commtikz@hh}}%
+  }
+
+  \backgroundpath{%
+    \commtikz@muxparams
+    \pgfpathmoveto{\pgfpoint{-\commtikz@hw}{\commtikz@hhW}}%
+    \pgfpathlineto{\pgfpoint{\commtikz@hw}{\commtikz@hhE}}%
+    \pgfpathlineto{\pgfpoint{\commtikz@hw}{-\commtikz@hhE}}%
+    \pgfpathlineto{\pgfpoint{-\commtikz@hw}{-\commtikz@hhW}}%
+    \pgfpathclose
+  }
+
+  \beforebackgroundpath{%
+    \commtikz@muxparams
+    \ifnum\pgfkeysvalueof{/tikz/commtikz/flip}=1\relax
+      % Demux (1-to-N waveguide fan from W0 to E0..En)
+      \edef\commtikz@muxcnt{\ifnum\commtikz@numE<2 3\else\commtikz@numE\fi}%
+      \pgfpathmoveto{\pgfpoint{-\commtikz@hw}{0pt}}%
+      \pgfpathlineto{\pgfpoint{-0.52\commtikz@hw}{0pt}}%
+      \pgfutil@for\commtikz@mi:=1,2,3,4,5,6,7,8\do{%
+        \ifnum\commtikz@mi>\commtikz@muxcnt\relax\else
+          \pgfmathsetlength\commtikz@sy{\commtikz@hhE - \commtikz@mi * (2 * \commtikz@hhE) / (\commtikz@muxcnt + 1)}%
+          \pgfpathmoveto{\pgfpoint{-0.52\commtikz@hw}{0pt}}%
+          \pgfpathcurveto{\pgfpoint{0.12\commtikz@hw}{0pt}}{\pgfpoint{0.12\commtikz@hw}{\commtikz@sy}}{\pgfpoint{0.76\commtikz@hw}{\commtikz@sy}}%
+          \pgfpathlineto{\pgfpoint{\commtikz@hw}{\commtikz@sy}}%
+        \fi
+      }%
+    \else
+      % Mux (N-to-1 waveguide fan from W0..Wn to E0)
+      \edef\commtikz@muxcnt{\ifnum\commtikz@numW<2 3\else\commtikz@numW\fi}%
+      \pgfutil@for\commtikz@mi:=1,2,3,4,5,6,7,8\do{%
+        \ifnum\commtikz@mi>\commtikz@muxcnt\relax\else
+          \pgfmathsetlength\commtikz@sy{\commtikz@hhW - \commtikz@mi * (2 * \commtikz@hhW) / (\commtikz@muxcnt + 1)}%
+          \pgfpathmoveto{\pgfpoint{-\commtikz@hw}{\commtikz@sy}}%
+          \pgfpathlineto{\pgfpoint{-0.76\commtikz@hw}{\commtikz@sy}}%
+          \pgfpathcurveto{\pgfpoint{-0.12\commtikz@hw}{\commtikz@sy}}{\pgfpoint{-0.12\commtikz@hw}{0pt}}{\pgfpoint{0.52\commtikz@hw}{0pt}}%
+        \fi
+      }%
+      \pgfpathmoveto{\pgfpoint{0.52\commtikz@hw}{0pt}}%
+      \pgfpathlineto{\pgfpoint{\commtikz@hw}{0pt}}%
+    \fi
+    \pgfusepath{stroke}%
+    \commtikz@drawcomplabel{0pt}{0pt}%
+  }
+}
+
+% ==============================================================================
+% 13. FBG (Fiber Bragg Grating)
+% ==============================================================================
+\pgfdeclareshape{commtikz_fbg}{
+  \commtikz@inheritrectanchors{commrect}
+
+  \backgroundpath{%
+    \commtikz@rectparams
+    \ifnum\pgfkeysvalueof{/tikz/commtikz/boxed}=1\relax
+      \pgfpathrectanglecorners{\pgfpoint{-\commtikz@hw}{-\commtikz@hh}}{\pgfpoint{\commtikz@hw}{\commtikz@hh}}%
+    \fi
+  }
+
+  \beforebackgroundpath{%
+    \commtikz@rectparams
+    % Mask any background connector behind the grating
+    \pgfscope
+      \pgfsetfillcolor{\pgfkeysvalueof{/tikz/commtikz/fill}}%
+      \pgfpathrectanglecorners{\pgfpoint{-\commtikz@hw}{-\commtikz@hh}}{\pgfpoint{\commtikz@hw}{\commtikz@hh}}%
+      \pgfusepath{fill}%
+    \endpgfscope
+    % Horizontal fiber line from -hw to +hw
+    \pgfpathmoveto{\pgfpoint{-\commtikz@hw}{0pt}}%
+    \pgfpathlineto{\pgfpoint{\commtikz@hw}{0pt}}%
+    % 6 vertical grating bars
+    \pgfmathsetlength\commtikz@fbggh{0.95 * \commtikz@hh}%
+    \pgfutil@for\commtikz@gi:=0,1,2,3,4,5\do{%
+      \pgfmathsetlength\commtikz@gx{(-0.78947 + \commtikz@gi * 0.31579) * \commtikz@hw}%
+      \pgfpathmoveto{\pgfpoint{\commtikz@gx}{-\commtikz@fbggh}}%
+      \pgfpathlineto{\pgfpoint{\commtikz@gx}{\commtikz@fbggh}}%
+    }%
+    \pgfusepath{stroke}%
+  }
+}
+
+% ==============================================================================
+% 14. Circulator (3/4-port Optical/RF Circulator)
+% ==============================================================================
+\pgfdeclareshape{commtikz_circulator}{
+  \commtikz@inheritcircanchors{commcircle}
+  \inheritbackgroundpath[from=commcircle]
+
+  % Numbered ports 1 (West), 2 (East), 3 (South), 4 (North)
+  \anchor{1}{\commtikz@circparams\pgfpoint{-\commtikz@r}{0pt}}
+  \anchor{2}{\commtikz@circparams\pgfpoint{\commtikz@r}{0pt}}
+  \anchor{3}{\commtikz@circparams\pgfpoint{0pt}{-\commtikz@r}}
+  \anchor{4}{\commtikz@circparams\pgfpoint{0pt}{\commtikz@r}}
+
+  \beforebackgroundpath{%
+    \commtikz@circparams
+    \pgfmathsetlength\commtikz@ar{0.60 * \commtikz@r}%
+    \ifnum\pgfkeysvalueof{/tikz/commtikz/ccw}=1\relax
+      % Counter-clockwise arc from -200 to 70 deg
+      \pgfpathmoveto{\pgfpointpolar{-200}{\commtikz@ar}}%
+      \pgfpatharc{-200}{70}{\commtikz@ar}%
+      \pgfusepath{stroke}%
+      % Arrowhead at 70 deg pointing CCW (tangent angle 160 deg)
+      \pgfscope
+        \commtikz@use@strokecolor@as@fill
+        \pgftransformshift{\pgfpointpolar{70}{\commtikz@ar}}%
+        \pgftransformrotate{-30}%
+        \pgfpathmoveto{\pgfpoint{-0.16\commtikz@r}{0pt}}%
+        \pgfpathlineto{\pgfpoint{0.16\commtikz@r}{0.12\commtikz@r}}%
+        \pgfpathlineto{\pgfpoint{0.16\commtikz@r}{-0.12\commtikz@r}}%
+        \pgfpathclose
+        \pgfusepath{fill}%
+      \endpgfscope
+    \else
+      % Clockwise arc from 200 deg down to -70 deg
+      \pgfpathmoveto{\pgfpointpolar{200}{\commtikz@ar}}%
+      \pgfpatharc{200}{-70}{\commtikz@ar}%
+      \pgfusepath{stroke}%
+      % Arrowhead at -70 deg rotated by 30 deg
+      \pgfscope
+        \commtikz@use@strokecolor@as@fill
+        \pgftransformshift{\pgfpointpolar{-70}{\commtikz@ar}}%
+        \pgftransformrotate{30}%
+        \pgfpathmoveto{\pgfpoint{-0.16\commtikz@r}{0pt}}%
+        \pgfpathlineto{\pgfpoint{0.16\commtikz@r}{0.12\commtikz@r}}%
+        \pgfpathlineto{\pgfpoint{0.16\commtikz@r}{-0.12\commtikz@r}}%
+        \pgfpathclose
+        \pgfusepath{fill}%
+      \endpgfscope
+    \fi
+  }
+}
+
+% ==============================================================================
+% 15. Isolator (Box with horizontal unidirectional arrow)
+% ==============================================================================
+\pgfdeclareshape{commtikz_isolator}{
+  \commtikz@inheritrectanchors{commrect}
+  \inheritbackgroundpath[from=commrect]
+
+  \beforebackgroundpath{%
+    \commtikz@rectparams
+    \ifnum\pgfkeysvalueof{/tikz/commtikz/flip}=1\relax
+      \commtikz@drawarrow{0.50\commtikz@hw}{0pt}{-0.50\commtikz@hw}{0pt}{0.20\commtikz@u}{0.14\commtikz@u}%
+    \else
+      \commtikz@drawarrow{-0.50\commtikz@hw}{0pt}{0.50\commtikz@hw}{0pt}{0.20\commtikz@u}{0.14\commtikz@u}%
+    \fi
+  }
+}
+
+% ==============================================================================
+% 16. Additional Electro-Optical Shapes:
+%     - hybrid90 (2x4 90-deg Optical Hybrid)
+%     - ringmod (Microring Modulator / Resonator)
+%     - phaseshifter (Optical Phase Shifter)
+%     - polarizer & waveplate
+%     - splitter, combiner, dcoupler
+% ==============================================================================
+\pgfdeclareshape{commtikz_hybrid90}{
+  \commtikz@inheritrectanchors{commrect}
+  \inheritbackgroundpath[from=commrect]
+
+  % Semantic aliases for Coherent Receiver ports
+  \anchor{sig}{\csname pgf@anchor@commtikz_hybrid90@W0\endcsname}
+  \anchor{lo}{\csname pgf@anchor@commtikz_hybrid90@W1\endcsname}
+  \anchor{I+}{\csname pgf@anchor@commtikz_hybrid90@E0\endcsname}
+  \anchor{I-}{\csname pgf@anchor@commtikz_hybrid90@E1\endcsname}
+  \anchor{Q+}{\csname pgf@anchor@commtikz_hybrid90@E2\endcsname}
+  \anchor{Q-}{\csname pgf@anchor@commtikz_hybrid90@E3\endcsname}
+
+  \beforebackgroundpath{%
+    \commtikz@rectparams
+    % Physically accurate 2x4 90-degree optical hybrid waveguide topology with smooth S-curves (arcz):
+    % West ports: W0 (+0.3333*hh, Signal) and W1 (-0.3333*hh, LO)
+    % East ports: E0 (+0.60*hh, I+), E1 (+0.20*hh, I-), E2 (-0.20*hh, Q+), E3 (-0.60*hh, Q-)
+    % 1. Signal input W0 splits to upper I-coupler (+0.60*hh) and lower Q-coupler (-0.20*hh)
+    \pgfpathmoveto{\pgfpoint{-\commtikz@hw}{0.3333\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.80\commtikz@hw}{0.3333\commtikz@hh}}%
+    \pgfpathcurveto{\pgfpoint{-0.56\commtikz@hw}{0.3333\commtikz@hh}}{\pgfpoint{-0.56\commtikz@hw}{0.60\commtikz@hh}}{\pgfpoint{-0.32\commtikz@hw}{0.60\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{0.28\commtikz@hw}{0.60\commtikz@hh}}%
+    \pgfpathcurveto{\pgfpoint{0.56\commtikz@hw}{0.60\commtikz@hh}}{\pgfpoint{0.56\commtikz@hw}{0.20\commtikz@hh}}{\pgfpoint{0.84\commtikz@hw}{0.20\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{\commtikz@hw}{0.20\commtikz@hh}}%
+    % Signal crossover branch to Q-coupler
+    \pgfpathmoveto{\pgfpoint{-0.80\commtikz@hw}{0.3333\commtikz@hh}}%
+    \pgfpathcurveto{\pgfpoint{-0.26\commtikz@hw}{0.3333\commtikz@hh}}{\pgfpoint{-0.26\commtikz@hw}{-0.20\commtikz@hh}}{\pgfpoint{0.28\commtikz@hw}{-0.20\commtikz@hh}}%
+    \pgfpathcurveto{\pgfpoint{0.56\commtikz@hw}{-0.20\commtikz@hh}}{\pgfpoint{0.56\commtikz@hw}{-0.60\commtikz@hh}}{\pgfpoint{0.84\commtikz@hw}{-0.60\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{\commtikz@hw}{-0.60\commtikz@hh}}%
+    % 2. LO input W1 splits to upper I-coupler (+0.20*hh) and lower Q-coupler (-0.60*hh via 90-deg shift)
+    \pgfpathmoveto{\pgfpoint{-0.80\commtikz@hw}{-0.3333\commtikz@hh}}%
+    \pgfpathcurveto{\pgfpoint{-0.26\commtikz@hw}{-0.3333\commtikz@hh}}{\pgfpoint{-0.26\commtikz@hw}{0.20\commtikz@hh}}{\pgfpoint{0.28\commtikz@hw}{0.20\commtikz@hh}}%
+    \pgfpathcurveto{\pgfpoint{0.56\commtikz@hw}{0.20\commtikz@hh}}{\pgfpoint{0.56\commtikz@hw}{0.60\commtikz@hh}}{\pgfpoint{0.84\commtikz@hw}{0.60\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{\commtikz@hw}{0.60\commtikz@hh}}%
+    % LO lower branch to Q-coupler via 90-degree phase shift
+    \pgfpathmoveto{\pgfpoint{-\commtikz@hw}{-0.3333\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.80\commtikz@hw}{-0.3333\commtikz@hh}}%
+    \pgfpathcurveto{\pgfpoint{-0.56\commtikz@hw}{-0.3333\commtikz@hh}}{\pgfpoint{-0.56\commtikz@hw}{-0.60\commtikz@hh}}{\pgfpoint{-0.32\commtikz@hw}{-0.60\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{0.28\commtikz@hw}{-0.60\commtikz@hh}}%
+    \pgfpathcurveto{\pgfpoint{0.56\commtikz@hw}{-0.60\commtikz@hh}}{\pgfpoint{0.56\commtikz@hw}{-0.20\commtikz@hh}}{\pgfpoint{0.84\commtikz@hw}{-0.20\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{\commtikz@hw}{-0.20\commtikz@hh}}%
+    \pgfusepath{stroke}%
+    % Filled black 90-degree phase-shifter pad on the lower LO-to-Q horizontal segment (same style as IQM)
+    \pgfscope
+      \commtikz@use@strokecolor@as@fill
+      \pgfpathrectanglecorners{\pgfpoint{-0.17\commtikz@hw}{-0.69\commtikz@hh}}{\pgfpoint{0.13\commtikz@hw}{-0.51\commtikz@hh}}%
+      \pgfusepath{fill}%
+    \endpgfscope
+  }
+}
+
+\pgfdeclareshape{commtikz_ringmod}{
+  \commtikz@inheritrectanchors{commrect}
+  \inheritbackgroundpath[from=commrect]
+
+  \beforebackgroundpath{%
+    \commtikz@rectparams
+    % Bus waveguide near bottom
+    \pgfpathmoveto{\pgfpoint{-0.85\commtikz@hw}{-0.52\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{0.85\commtikz@hw}{-0.52\commtikz@hh}}%
+    % Coupled microring resonator
+    \pgfmathsetlength\commtikz@rr{0.44 * \commtikz@hh}%
+    \pgfpathcircle{\pgfpoint{0pt}{0.02\commtikz@hh}}{\commtikz@rr}%
+    \ifnum\pgfkeysvalueof{/tikz/commtikz/add drop}=1\relax
+      \pgfpathmoveto{\pgfpoint{-0.85\commtikz@hw}{0.56\commtikz@hh}}%
+      \pgfpathlineto{\pgfpoint{0.85\commtikz@hw}{0.56\commtikz@hh}}%
+    \fi
+    \pgfusepath{stroke}%
+    \commtikz@drawcomplabel{0pt}{0.02\commtikz@hh}%
+  }
+}
+
+\pgfdeclareshape{commtikz_phaseshifter}{
+  \commtikz@inheritrectanchors{commrect}
+  \inheritbackgroundpath[from=commrect]
+
+  \beforebackgroundpath{%
+    \commtikz@rectparams
+    \ifnum\pgfkeysvalueof{/tikz/commtikz/tunable}=1\relax
+      \commtikz@drawarrow{-0.82\commtikz@hw}{-0.82\commtikz@hh}{0.90\commtikz@hw}{0.90\commtikz@hh}{0.14\commtikz@u}{0.10\commtikz@u}%
+      \pgfscope
+        \pgfsetfillcolor{\pgfkeysvalueof{/tikz/commtikz/fill}}%
+        \pgfpathellipse{\pgfpointorigin}{\pgfpoint{0.40\commtikz@hw}{0pt}}{\pgfpoint{0pt}{0.35\commtikz@hh}}%
+        \pgfusepath{fill}%
+      \endpgfscope
+    \fi
+    % Immutable block-scaled sans-serif uppercase Phi (vertical stem + central oval)
+    \pgfpathmoveto{\pgfpoint{0pt}{-0.50\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{0pt}{0.50\commtikz@hh}}%
+    \pgfpathellipse{\pgfpointorigin}{\pgfpoint{0.35\commtikz@hw}{0pt}}{\pgfpoint{0pt}{0.30\commtikz@hh}}%
+    \pgfusepath{stroke}%
+  }
+}
+
+\pgfdeclareshape{commtikz_polarizer}{
+  \commtikz@inheritrectanchors{commrect}
+  \inheritbackgroundpath[from=commrect]
+
+  \beforebackgroundpath{%
+    \commtikz@rectparams
+    % Single vertical shaft between the two arrowhead bases (no overlap with arrow tips)
+    \pgfpathmoveto{\pgfpoint{0pt}{-0.48\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{0pt}{0.48\commtikz@hh}}%
+    \pgfusepath{stroke}%
+    % Top and bottom filled triangle arrowheads
+    \pgfscope
+      \commtikz@use@strokecolor@as@fill
+      % Top arrowhead pointing up to +0.78*hh
+      \pgfpathmoveto{\pgfpoint{0pt}{0.78\commtikz@hh}}%
+      \pgfpathlineto{\pgfpoint{-0.46\commtikz@hw}{0.46\commtikz@hh}}%
+      \pgfpathlineto{\pgfpoint{0.46\commtikz@hw}{0.46\commtikz@hh}}%
+      \pgfpathclose
+      % Bottom arrowhead pointing down to -0.78*hh
+      \pgfpathmoveto{\pgfpoint{0pt}{-0.78\commtikz@hh}}%
+      \pgfpathlineto{\pgfpoint{-0.46\commtikz@hw}{-0.46\commtikz@hh}}%
+      \pgfpathlineto{\pgfpoint{0.46\commtikz@hw}{-0.46\commtikz@hh}}%
+      \pgfpathclose
+      \pgfusepath{fill}%
+    \endpgfscope
+  }
+}
+
+\pgfdeclareshape{commtikz_waveplate}{
+  \commtikz@inheritrectanchors{commrect}
+  \inheritbackgroundpath[from=commrect]
+
+  \beforebackgroundpath{%
+    \commtikz@rectparams
+    \pgfscope
+      \pgfsetdash{{2pt}{1.5pt}}{0pt}%
+      \pgfpathmoveto{\pgfpoint{-0.65\commtikz@hw}{-0.75\commtikz@hh}}%
+      \pgfpathlineto{\pgfpoint{0.65\commtikz@hw}{0.75\commtikz@hh}}%
+      \pgfusepath{stroke}%
+    \endpgfscope
+    \commtikz@drawcomplabel{0pt}{0pt}%
+  }
+}
+
+\pgfdeclareshape{commtikz_splitter}{
+  \commtikz@inheritrectanchors{commrect}
+  \inheritbackgroundpath[from=commrect]
+
+  \beforebackgroundpath{%
+    \commtikz@rectparams
+    \ifnum\pgfkeysvalueof{/tikz/commtikz/flip}=1\relax
+      % 2x1 combiner: W0 (+0.333*hh) and W1 (-0.333*hh) to E0 (0)
+      \pgfpathmoveto{\pgfpoint{-\commtikz@hw}{0.3333\commtikz@hh}}%
+      \pgfpathlineto{\pgfpoint{-0.68\commtikz@hw}{0.3333\commtikz@hh}}%
+      \pgfpathcurveto{\pgfpoint{-0.22\commtikz@hw}{0.3333\commtikz@hh}}{\pgfpoint{-0.22\commtikz@hw}{0pt}}{\pgfpoint{0.24\commtikz@hw}{0pt}}%
+      \pgfpathlineto{\pgfpoint{\commtikz@hw}{0pt}}%
+      \pgfpathmoveto{\pgfpoint{-\commtikz@hw}{-0.3333\commtikz@hh}}%
+      \pgfpathlineto{\pgfpoint{-0.68\commtikz@hw}{-0.3333\commtikz@hh}}%
+      \pgfpathcurveto{\pgfpoint{-0.22\commtikz@hw}{-0.3333\commtikz@hh}}{\pgfpoint{-0.22\commtikz@hw}{0pt}}{\pgfpoint{0.24\commtikz@hw}{0pt}}%
+    \else
+      % 1x2 splitter: W0 (0) to E0 (+0.333*hh) and E1 (-0.333*hh)
+      \pgfpathmoveto{\pgfpoint{-\commtikz@hw}{0pt}}%
+      \pgfpathlineto{\pgfpoint{-0.24\commtikz@hw}{0pt}}%
+      \pgfpathcurveto{\pgfpoint{0.22\commtikz@hw}{0pt}}{\pgfpoint{0.22\commtikz@hw}{0.3333\commtikz@hh}}{\pgfpoint{0.68\commtikz@hw}{0.3333\commtikz@hh}}%
+      \pgfpathlineto{\pgfpoint{\commtikz@hw}{0.3333\commtikz@hh}}%
+      \pgfpathmoveto{\pgfpoint{-0.24\commtikz@hw}{0pt}}%
+      \pgfpathcurveto{\pgfpoint{0.22\commtikz@hw}{0pt}}{\pgfpoint{0.22\commtikz@hw}{-0.3333\commtikz@hh}}{\pgfpoint{0.68\commtikz@hw}{-0.3333\commtikz@hh}}%
+      \pgfpathlineto{\pgfpoint{\commtikz@hw}{-0.3333\commtikz@hh}}%
+    \fi
+    \pgfusepath{stroke}%
+  }
+}
+
+\pgfdeclareshape{commtikz_dcoupler}{
+  \commtikz@inheritrectanchors{commrect}
+  \inheritbackgroundpath[from=commrect]
+
+  \beforebackgroundpath{%
+    \commtikz@rectparams
+    % 2x2 evanescent directional coupler waveguides with smooth S-curves
+    \pgfpathmoveto{\pgfpoint{-\commtikz@hw}{0.3333\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.72\commtikz@hw}{0.3333\commtikz@hh}}%
+    \pgfpathcurveto{\pgfpoint{-0.48\commtikz@hw}{0.3333\commtikz@hh}}{\pgfpoint{-0.48\commtikz@hw}{0.09\commtikz@hh}}{\pgfpoint{-0.24\commtikz@hw}{0.09\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{0.24\commtikz@hw}{0.09\commtikz@hh}}%
+    \pgfpathcurveto{\pgfpoint{0.48\commtikz@hw}{0.09\commtikz@hh}}{\pgfpoint{0.48\commtikz@hw}{0.3333\commtikz@hh}}{\pgfpoint{0.72\commtikz@hw}{0.3333\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{\commtikz@hw}{0.3333\commtikz@hh}}%
+    \pgfpathmoveto{\pgfpoint{-\commtikz@hw}{-0.3333\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{-0.72\commtikz@hw}{-0.3333\commtikz@hh}}%
+    \pgfpathcurveto{\pgfpoint{-0.48\commtikz@hw}{-0.3333\commtikz@hh}}{\pgfpoint{-0.48\commtikz@hw}{-0.09\commtikz@hh}}{\pgfpoint{-0.24\commtikz@hw}{-0.09\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{0.24\commtikz@hw}{-0.09\commtikz@hh}}%
+    \pgfpathcurveto{\pgfpoint{0.48\commtikz@hw}{-0.09\commtikz@hh}}{\pgfpoint{0.48\commtikz@hw}{-0.3333\commtikz@hh}}{\pgfpoint{0.72\commtikz@hw}{-0.3333\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{\commtikz@hw}{-0.3333\commtikz@hh}}%
+    \pgfusepath{stroke}%
+  }
+}
+
+% ==============================================================================
+% 17. User-facing TikZ Styles for Optical & Electro-Optical Components
+% ==============================================================================
+\tikzset{
+  % Couplers
+  couplercirc/.style={shape=commtikz_couplercirc, commtikz base node, width=0.3, height=0.15},
+  coupler/.style={couplercirc, #1},
+  coupler/.default={},
+  splitter/.style={shape=commtikz_splitter, commtikz base node, width=1.0, height=1.0, numW=1, numE=2, /tikz/commtikz/flip=0},
+  combiner/.style={shape=commtikz_splitter, commtikz base node, width=1.0, height=1.0, numW=2, numE=1, /tikz/commtikz/flip=1},
+  dcoupler/.style={shape=commtikz_dcoupler, commtikz base node, width=1.2, height=1.0, numW=2, numE=2},
+  % Free-space & Passive Optics
+  bs/.style={shape=commtikz_bs, commtikz base node, width=1.0, height=1.0},
+  beamsplitter/.style={bs, #1},
+  beamsplitter/.default={},
+  pbs/.style={shape=commtikz_pbs, commtikz base node, width=1.0, height=1.0},
+  mirror/.style={shape=commtikz_mirror, commtikz base node, width=0.3, height=1.0},
+  polarizer/.style={shape=commtikz_polarizer, commtikz base node, width=0.45, height=1.0},
+  waveplate/.style={shape=commtikz_waveplate, commtikz base node, width=0.45, height=1.0},
+  hwp/.style={waveplate, label=above:{\footnotesize$\lambda/2$}},
+  qwp/.style={waveplate, label=above:{\footnotesize$\lambda/4$}},
+  % Fiber & Waveguide Elements
+  fiberspool/.style={shape=commtikz_fiberspool, commtikz bare node, draw=OPTcol, width=1.0, height=1.0},
+  fiber/.style={fiberspool, #1},
+  fiber/.default={},
+  smf/.style={fiberspool, #1},
+  smf/.default={},
+  polctrl/.style={shape=commtikz_polctrl, commtikz base node, width=1.0, height=1.0},
+  pc/.style={polctrl, #1},
+  pc/.default={},
+  voa/.style={shape=commtikz_voa, commtikz base node, width=1.0, height=1.0},
+  fbg/.style={shape=commtikz_fbg, commtikz bare node, width=0.95, height=0.4},
+  circulator/.style={shape=commtikz_circulator, commtikz base node, comp radius=0.5},
+  isolator/.style={shape=commtikz_isolator, commtikz base node, width=1.0, height=1.0},
+  iso/.style={isolator, #1},
+  iso/.default={},
+  mux/.style={shape=commtikz_mux, commtikz base node, width=1.1, height1=2.2, height2=1.0, /tikz/commtikz/flip=0},
+  demux/.style={shape=commtikz_mux, commtikz base node, width=1.1, height1=2.2, height2=1.0, /tikz/commtikz/flip=1},
+  % Electro-Optical Modulators & Active Devices
+  pm/.style={shape=commtikz_pm, commtikz base node, width=1.15, height=0.90},
+  phasemod/.style={pm, #1},
+  phasemod/.default={},
+  mzm/.style={shape=commtikz_mzm, commtikz base node, width=1.40, height=0.90},
+  iqm/.style={shape=commtikz_iqm, commtikz base node, width=2.05, height=1.10, port span x=1.55},
+  dpmzm/.style={iqm, #1},
+  dpmzm/.default={},
+  ringmod/.style={shape=commtikz_ringmod, commtikz base node, width=1.2, height=1.0},
+  mrr/.style={ringmod, #1},
+  mrr/.default={},
+  phaseshifter/.style={shape=commtikz_phaseshifter, commtikz base node, width=0.85, height=0.85, tunable=true},
+  hybrid90/.style={shape=commtikz_hybrid90, commtikz base node, width=1.45, height=1.45, numW=2, numE=4},
+  % Sources & Detectors
+  ld/.style={shape=commtikz_ld, commtikz base node, width=1.0, height=1.0},
+  laser/.style={ld, #1},
+  laser/.default={},
+  pd/.style={shape=commtikz_pd, commtikz base node, width=1.0, height=1.0},
+  photodiode/.style={pd, #1},
+  photodiode/.default={},
+  bpd/.style={shape=commtikz_bpd, commtikz base node, width=1.1, height=1.4, numW=2, numE=1},
+}

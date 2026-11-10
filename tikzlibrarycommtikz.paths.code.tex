@@ -1,0 +1,307 @@
+%% tikzlibrarycommtikz.paths.code.tex
+%% Signal Domain Paths, Background Layer Connector Rendering, Mid-Path Arrows,
+%% Curved Connectors, Waveguide Bends, and Inline Path Placement.
+
+% ==============================================================================
+% 1. Background Layer Hook for Connector Paths
+%    Draws signal connector lines on the 'background' layer behind all main
+%    component nodes while keeping inline nodes and labels on the 'main' layer.
+% ==============================================================================
+\newbox\commtikz@savedfigbox
+\newif\ifcommtikz@pathonbg
+\def\commtikz@mainlayername{main}
+
+\ifx\commtikz@orig@tikz@finish\@undefined
+  \let\commtikz@orig@tikz@finish=\tikz@finish
+  \def\tikz@finish{%
+    \iftikz@is@node
+      \commtikz@orig@tikz@finish
+    \else
+      \pgfsyssoftpath@getcurrentpath\commtikz@temppath
+      \pgfprocessround{\commtikz@temppath}{\commtikz@temppath}%
+      \pgfsyssoftpath@setcurrentpath\commtikz@temppath
+      \pgfsetcornersarced{\pgfpointorigin}%
+      \ifcommtikz@pathonbg
+        \ifx\pgfonlayer@name\commtikz@mainlayername
+          \commtikz@pathonbgfalse
+          \global\setbox\commtikz@savedfigbox=\box\tikz@figbox
+          \pgfonlayer{background}%
+          \pgfsetlinewidth{\tikzscope@linewidth}%
+          \begingroup
+          \commtikz@orig@tikz@finish
+          \endpgfonlayer
+          \box\commtikz@savedfigbox
+          \endgroup
+        \else
+          \commtikz@orig@tikz@finish
+        \fi
+      \else
+        \commtikz@orig@tikz@finish
+      \fi
+    \fi
+  }
+\fi
+
+% ==============================================================================
+% 2. Signal Domain Line Styles, Waveguide Bends & Arrow Decorations
+% ==============================================================================
+\tikzset{
+  every node/.append code={\commtikz@pathonbgfalse},
+  behind nodes/.is if=commtikz@pathonbg,
+  behind nodes/.default=true,
+  % Base connection line style
+  commtikz line/.style={
+    behind nodes=true,
+    line width=\pgfkeysvalueof{/tikz/commtikz/signal line width},
+    line cap=butt,
+    line join=miter,
+  },
+  commtikz arrow tip/.style={
+    -{Latex[length=4.6pt, width=3.3pt]}
+  },
+  commtikz rev arrow tip/.style={
+    {Latex[length=4.6pt, width=3.3pt]}-
+  },
+  % Signal domain styles
+  opt/.style={draw=OPTcol, commtikz line},
+  rf/.style={draw=RFcol, commtikz line},
+  optrf/.style={draw=OPTRFcol, commtikz line},
+  dc/.style={draw=DCcol, commtikz line},
+  ctrl/.style={draw=CTRLcol, commtikz line, densely dashed},
+  % Circular / rounded 90-deg and 180-deg bend helpers for ALL connection types
+  bend/.style={rounded corners=#1},
+  bend/.default=0.22cm,
+  waveguide bend/.style={bend=#1},
+  waveguide bend/.default=0.22cm,
+  opt bend/.style={opt, bend=#1},
+  opt bend/.default=0.22cm,
+  rf bend/.style={rf, bend=#1},
+  rf bend/.default=0.22cm,
+  optrf bend/.style={optrf, bend=#1},
+  optrf bend/.default=0.22cm,
+  dc bend/.style={dc, bend=#1},
+  dc bend/.default=0.22cm,
+  ctrl bend/.style={ctrl, bend=#1},
+  ctrl bend/.default=0.22cm,
+  % Exact 180-degree semicircular U-turns (work on opt, rf, optrf, dc, ctrl, or any path)
+  uturn/.style={
+    to path={
+      let \p1 = (\tikztostart),
+          \p2 = (\tikztotarget),
+          \n{r} = {0.5 * abs(\y2 - \y1)},
+          \n{xm} = {max(\x1, \x2) + #1} in
+      (\tikztostart) -- (\n{xm}, \y1)
+      arc[start angle={(\y2 > \y1 ? -90 : 90)}, end angle={(\y2 > \y1 ? 90 : -90)}, radius=\n{r}]
+      -- (\tikztotarget) \tikztonodes
+    }
+  },
+  uturn/.default=0pt,
+  uturn left/.style={
+    to path={
+      let \p1 = (\tikztostart),
+          \p2 = (\tikztotarget),
+          \n{r} = {0.5 * abs(\y2 - \y1)},
+          \n{xm} = {min(\x1, \x2) - #1} in
+      (\tikztostart) -- (\n{xm}, \y1)
+      arc[start angle={(\y2 > \y1 ? 270 : 90)}, end angle={(\y2 > \y1 ? 90 : 270)}, radius=\n{r}]
+      -- (\tikztotarget) \tikztonodes
+    }
+  },
+  uturn left/.default=0pt,
+  % Directed signal domain styles
+  opt->/.style={opt, commtikz arrow tip},
+  rf->/.style={rf, commtikz arrow tip},
+  optrf->/.style={optrf, commtikz arrow tip},
+  dc->/.style={dc, commtikz arrow tip},
+  ctrl->/.style={ctrl, commtikz arrow tip},
+  <-opt/.style={opt, commtikz rev arrow tip},
+  <-rf/.style={rf, commtikz rev arrow tip},
+  <-optrf/.style={optrf, commtikz rev arrow tip},
+  % Mid-path arrow decorations (with automatic rounded-corner path resolution)
+  commtikz round before decorate/.code={%
+    \ifx\tikz@actions@path\@undefined\else
+      \pgfprocessround{\tikz@actions@path}{\tikz@actions@path}%
+    \fi
+    \pgfsyssoftpath@getcurrentpath\commtikz@temppath
+    \pgfprocessround{\commtikz@temppath}{\commtikz@temppath}%
+    \pgfsyssoftpath@setcurrentpath\commtikz@temppath
+    \pgfsetcornersarced{\pgfpointorigin}%
+  },
+  ->-/.style={
+    decoration={
+      markings,
+      mark=at position #1 with {\pgfsetcornersarced{\pgfpointorigin}\arrow{Latex[length=4.6pt, width=3.3pt]}}
+    },
+    postaction={commtikz round before decorate, decorate}
+  },
+  ->-/.default=0.5,
+  -<-/.style={
+    decoration={
+      markings,
+      mark=at position #1 with {\pgfsetcornersarced{\pgfpointorigin}\arrowreversed{Latex[length=4.6pt, width=3.3pt]}}
+    },
+    postaction={commtikz round before decorate, decorate}
+  },
+  -<-/.default=0.5,
+  ->>-/.style={
+    decoration={
+      markings,
+      mark=at position 0.43 with {\pgfsetcornersarced{\pgfpointorigin}\arrow{Latex[length=4.6pt, width=3.3pt]}},
+      mark=at position 0.57 with {\pgfsetcornersarced{\pgfpointorigin}\arrow{Latex[length=4.6pt, width=3.3pt]}}
+    },
+    postaction={commtikz round before decorate, decorate}
+  },
+  -<<-/.style={
+    decoration={
+      markings,
+      mark=at position 0.43 with {\pgfsetcornersarced{\pgfpointorigin}\arrowreversed{Latex[length=4.6pt, width=3.3pt]}},
+      mark=at position 0.57 with {\pgfsetcornersarced{\pgfpointorigin}\arrowreversed{Latex[length=4.6pt, width=3.3pt]}}
+    },
+    postaction={commtikz round before decorate, decorate}
+  },
+  % ==============================================================================
+  % 3. Curved Connectors (arcz, arcn, arc2, arc3, arcloop)
+  % ==============================================================================
+  % arcz: Horizontal-to-horizontal S/Z curve
+  arcz/.style={
+    out=0,
+    in=180,
+    looseness=#1
+  },
+  arcz/.default=0.85,
+  arcz rev/.style={
+    out=180,
+    in=0,
+    looseness=#1
+  },
+  arcz rev/.default=0.85,
+  % arcn: Vertical-to-vertical N curve
+  arcn/.style={
+    out=-90,
+    in=90,
+    looseness=#1
+  },
+  arcn/.default=0.85,
+  arcn up/.style={
+    out=90,
+    in=-90,
+    looseness=#1
+  },
+  arcn up/.default=0.85,
+  % arc2: Symmetric C curve
+  arc2/.style={
+    bend left=#1
+  },
+  arc2/.default=30,
+  arc2 right/.style={
+    bend right=#1
+  },
+  arc2 right/.default=30,
+  % arc3: Custom cubic curve (pass out=..., in=..., looseness=...)
+  arc3/.style={
+    out=45,
+    in=135,
+    #1
+  },
+  arc3/.default={},
+  % arcloop: High-arched loop between two points
+  arcloop/.style={
+    out=75,
+    in=105,
+    looseness=#1
+  },
+  arcloop/.default=1.4,
+  % Orthogonal and perpendicular routing helpers
+  hv/.style={to path={-| (\tikztotarget) \tikztonodes}},
+  vh/.style={to path={|- (\tikztotarget) \tikztonodes}},
+  vperp/.style={to path={-- (\tikztostart |- \tikztotarget) \tikztonodes}},
+  vperp to/.style={to path={(\tikztostart -| \tikztotarget) -- (\tikztotarget) \tikztonodes}},
+  hperp/.style={to path={-- (\tikztostart -| \tikztotarget) \tikztonodes}},
+  hperp to/.style={to path={(\tikztostart |- \tikztotarget) -- (\tikztotarget) \tikztonodes}},
+  perp/.style={
+    to path={
+      let \p1 = (\tikztostart),
+          \p2 = (\tikztotarget),
+          \n{px} = {abs(\y2-\y1) >= abs(\x2-\x1) ? \x1 : \x2},
+          \n{py} = {abs(\y2-\y1) >= abs(\x2-\x1) ? \y2 : \y1} in
+      -- (\n{px}, \n{py}) \tikztonodes
+    }
+  },
+  perp to/.style={
+    to path={
+      let \p1 = (\tikztostart),
+          \p2 = (\tikztotarget),
+          \n{px} = {abs(\y2-\y1) >= abs(\x2-\x1) ? \x2 : \x1},
+          \n{py} = {abs(\y2-\y1) >= abs(\x2-\x1) ? \y1 : \y2} in
+      (\n{px}, \n{py}) -- (\tikztotarget) \tikztonodes
+    }
+  },
+  hvh/.style={
+    to path={
+      -- ($(\tikztostart)!#1!(\tikztotarget |- \tikztostart)$)
+      |- (\tikztotarget) \tikztonodes
+    }
+  },
+  hvh/.default=0.5,
+  vhv/.style={
+    to path={
+      -- ($(\tikztostart)!#1!(\tikztostart |- \tikztotarget)$)
+      -| (\tikztotarget) \tikztonodes
+    }
+  },
+  vhv/.default=0.5,
+  % ==============================================================================
+  % 4. Inline Component Placement along Paths: to[inline={...}]
+  % ==============================================================================
+  commtikz save path color/.code={\let\commtikz@saved@pathcolor=\tikz@strokecolor},
+  commtikz use path color/.code={%
+    \ifx\commtikz@saved@pathcolor\pgfutil@empty
+      \tikzset{draw=black}%
+    \else
+      \tikzset{draw=\commtikz@saved@pathcolor}%
+    \fi
+  },
+  inline/.style={
+    to path={
+      let \p{commtikz@d} = ($(\tikztotarget)-(\tikztostart)$),
+          \n{commtikz@ang} = {atan2(\y{commtikz@d},\x{commtikz@d})} in
+      node[at={($(\tikztostart)!0.5!(\tikztotarget)$)}, rotate=\n{commtikz@ang}, transform shape,
+           commtikz save path color, solid, draw=black, text=black, name=commtikz@tmp@inline, #1, alias=commtikz@tmp@inline] {}
+      (\tikztostart) -- (commtikz@tmp@inline.west)
+      (commtikz@tmp@inline.east) -- (\tikztotarget)
+      \tikztonodes
+    }
+  },
+  inline upright/.style={
+    to path={
+      node[at={($(\tikztostart)!0.5!(\tikztotarget)$)},
+           commtikz save path color, solid, draw=black, text=black, name=commtikz@tmp@inline, #1, alias=commtikz@tmp@inline] {}
+      (\tikztostart) -- (commtikz@tmp@inline.west)
+      (commtikz@tmp@inline.east) -- (\tikztotarget)
+      \tikztonodes
+    }
+  },
+  % Convenient inline shorthands
+  to fiber/.style={inline={fiber, commtikz use path color, #1}},
+  to fiber/.default={},
+  to fiberspool/.style={inline={fiberspool, commtikz use path color, #1}},
+  to fiberspool/.default={},
+  to polctrl/.style={inline={polctrl, #1}},
+  to polctrl/.default={},
+  to voa/.style={inline={voa, #1}},
+  to voa/.default={},
+  to fbg/.style={inline={fbg, #1}},
+  to fbg/.default={},
+  to isolator/.style={inline={isolator, #1}},
+  to isolator/.default={},
+  to pm/.style={inline={pm, #1}},
+  to pm/.default={},
+  to mzm/.style={inline={mzm, #1}},
+  to mzm/.default={},
+  to amp/.style={inline={amp, #1}},
+  to amp/.default={},
+  to edfa/.style={inline={edfa, #1}},
+  to edfa/.default={},
+  to filter/.style={inline={filter, #1}},
+  to filter/.default={},
+}
