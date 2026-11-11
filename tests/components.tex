@@ -1,0 +1,261 @@
+\documentclass[a4paper]{article}
+\usepackage[margin=1.5cm]{geometry}
+\usepackage{commtikz}
+\pagestyle{empty}
+\makeatletter
+\newdimen\testactual
+\newdimen\testexpected
+\newcommand\assertdistance[5]{%
+  \csname pgfextract#1\endcsname{\testactual}{\pgfpointdiff{\pgfpointanchor{#2}{#3}}{\pgfpointanchor{#2}{#4}}}%
+  \testexpected=#5\relax
+  \advance\testactual by -\testexpected
+  \ifdim\testactual<0pt \testactual=-\testactual\fi
+  \ifdim\testactual>0.02pt
+    \errmessage{Unexpected #1 distance for #2.#3/#4}%
+  \fi
+}
+\tikzset{assert stroke/.code={%
+  \edef\testactualcolor{\tikz@strokecolor}%
+  \def\testexpectedcolor{#1}%
+  \ifx\testactualcolor\pgfutil@empty \def\testactualcolor{.}\fi
+  \ifx\testexpectedcolor\pgfutil@empty \def\testexpectedcolor{.}\fi
+  \convertcolorspec{named}{\testactualcolor}{rgb}\testactualrgb
+  \convertcolorspec{named}{\testexpectedcolor}{rgb}\testexpectedrgb
+  \ifx\testactualrgb\testexpectedrgb\else
+    \errmessage{Expected stroke #1, got \testactualcolor}%
+  \fi
+}}
+% Observe the head dimensions actually used while rendering, across all heads
+% of a component (including optical emission pairs and curved arrows).
+\let\originalarrowgeometry\commtikz@arrowgeometry
+\def\assertcapturepath{%
+  \pgfsyssoftpath@getcurrentpath\testpathbefore
+  \tikzset{commtikz save path color}%
+  \pgfsyssoftpath@getcurrentpath\testpathafter
+  \ifx\testpathbefore\testpathafter\else
+    \errmessage{Color capture changed the existing connector path}%
+  \fi
+}
+\newif\ifcheckarrowheads
+\newdimen\expectedheadlength
+\newdimen\expectedheadwidth
+\def\commtikz@arrowgeometry#1#2#3#4{%
+  \originalarrowgeometry{#1}{#2}{#3}{#4}%
+  \ifcheckarrowheads
+    \testactual=\dimexpr\commtikz@arr@hl-\expectedheadlength\relax
+    \ifdim\testactual<0pt \testactual=-\testactual\fi
+    \ifdim\testactual>0.01pt \errmessage{Inconsistent arrowhead length}\fi
+    \testactual=\dimexpr\commtikz@arr@hw-\expectedheadwidth\relax
+    \ifdim\testactual<0pt \testactual=-\testactual\fi
+    \ifdim\testactual>0.01pt \errmessage{Inconsistent arrowhead width}\fi
+  \fi
+}
+\newcommand\assertgap[6]{%
+  \csname pgfextract#1\endcsname{\testactual}{\pgfpointdiff{\pgfpointanchor{#2}{#3}}{\pgfpointanchor{#4}{#5}}}%
+  \testexpected=#6\relax
+  \advance\testactual by -\testexpected
+  \ifdim\testactual<0pt \testactual=-\testactual\fi
+  \ifdim\testactual>0.02pt \errmessage{Incorrect label clearance for #2/#4: offset \the\testactual}\fi
+}
+\makeatother
+\begin{document}
+\noindent Standard square footprints (anchor assertions at nondefault unit):
+\begin{center}
+\begin{tikzpicture}[commtikz unit=0.8cm]
+  \foreach \component [count=\i from 0] in
+    {commrect,commsquare,bs,pbs,polctrl,voa,pm,ringmod,phaseshifter,
+     isolator,ld,pd,fbg,amp,vga,edfa,soa,dcoupler,splitter,combiner,
+     filter,oscillatorbox,demod,biastee,rfatt}{
+    \pgfmathtruncatemacro\col{mod(\i,5)}
+    \pgfmathtruncatemacro\row{floor(\i/5)}
+    \node[\component,label=below:{\small\texttt{\component}}] (b) at (2.6*\col,-1.5*\row) {};
+    \assertdistance{x}{b}{west}{east}{0.68cm}
+    \assertdistance{y}{b}{south}{north}{0.68cm}
+  }
+  % Anchors must use the node's saved size, even after another node is drawn.
+  \node[amp,width=1.8cm,height=0.7cm,numN=2] (custom) at (0,-7.8) {};
+  \node[pm,commtikz scale=0.6] (scaled) at (2.6,-7.8) {};
+  \assertdistance{x}{custom}{west}{east}{1.8cm}
+  \assertdistance{y}{custom}{south}{north}{0.7cm}
+  \assertdistance{y}{custom}{N0}{north}{0pt}
+  \assertdistance{x}{custom}{N0}{N1}{0.6cm}
+  \assertdistance{y}{custom}{S0}{south}{0pt}
+  \assertdistance{x}{scaled}{west}{east}{0.51cm}
+  \node[vga,tuneup=false] (down) at (5.2,-7.8) {};
+  \assertdistance{y}{down}{tune}{south}{0pt}
+  \node[amp,mirror flip] at (7.8,-7.8) {};
+  \node[fbg,boxed=false,width=0.95,height=0.4] at (10.4,-7.8) {};
+\end{tikzpicture}
+\end{center}
+
+\newpage
+\noindent Open arrows at three sizes; final column overrides width and height:
+\begin{center}
+\begin{tikzpicture}
+  \foreach \component [count=\i from 0] in {ld,isolator,polarizer,vga,elpd,elld,nmos,npn}{
+    \node[anchor=east,font=\small\ttfamily] at (-0.8,-1.6*\i) {\component};
+    \node[\component,commtikz scale=0.5] at (0,-1.6*\i) {};
+    \node[\component] at (2,-1.6*\i) {};
+    \node[\component,commtikz scale=1.4] at (4,-1.6*\i) {};
+    \node[\component,width=0.55,height=0.6] at (6,-1.6*\i) {};
+  }
+  \node[isolator,mirror flip] at (8,0) {};
+  \node[osc,commtikz scale=0.6] at (8,-2) {};
+  \node[scope] at (8,-4) {};
+  \node[dso,commtikz scale=1.4] at (8,-6) {};
+\end{tikzpicture}
+\end{center}
+\newpage
+\noindent Inline coupler color inheritance, overrides, rotation, and masking:
+\begin{center}
+\begin{tikzpicture}
+  \node[coupler,assert stroke=,label=above:default] at (0,1) {};
+  \node[coupler,draw=black,assert stroke=black,label=above:override] at (3,1) {};
+  \draw[opt] (-1,0) to[to coupler={assert stroke=OPTcol}] (1,0);
+  \draw[rf] (2,0) to[to couplercirc={assert stroke=RFcol}] (4,0);
+  \draw[optrf] (5,0) to[to coupler={assert stroke=OPTRFcol}] (7,0);
+  \draw[dc] (-1,-1) to[to coupler={assert stroke=DCcol}] (1,-1);
+  \draw[ctrl] (2,-1) to[to coupler={assert stroke=CTRLcol}] (4,-1);
+  \draw[draw=orange!70!black] (5,-1) to[to coupler={assert stroke=orange!70!black}] (7,-1);
+  \draw (8,0) to[to coupler={assert stroke=black}] (10,0);
+  \draw[color=magenta] (8,-1) to[to fiberspool={assert stroke=magenta}] (10,-1);
+  \draw[magenta] (8,-2) to[to coupler={assert stroke=magenta}] (10,-2);
+  \draw[draw=red,color=blue] (8,-3) to[to coupler={assert stroke=blue}] (10,-3);
+  \draw[color=blue,draw=red] (8,-4) to[to coupler={assert stroke=red}] (10,-4);
+  \draw[opt] (8,-5) -- (9,-5) \pgfextra{\assertcapturepath}
+    to[to coupler={assert stroke=OPTcol}] (10,-5);
+  \draw[opt] (-1,-2) to[to coupler={draw=black,assert stroke=black}] (1,-2);
+  \draw[rf] (2,-2) to[to fiberspool={assert stroke=RFcol}] (4,-2);
+  \draw[rf] (5,-2) to[to fiber={assert stroke=RFcol}] (7,-2);
+  \draw[opt] (-1,-4) to[to fbg] (2,-4) to[to amp] (5,-4) to[to voa] (8,-4);
+  \draw[optrf] (-1,-6) to[to coupler] (1,-5);
+  \draw[rf] (3,-6) to[to coupler] (3,-5);
+  \draw[opt] (5,-5) to[to coupler] (8,-6);
+\end{tikzpicture}
+\end{center}
+
+\noindent Preserved special footprints:
+\begin{center}
+\begin{tikzpicture}
+  \foreach \component/\w/\h [count=\i from 0] in
+    {mzm/1.40/0.90,iqm/2.05/1.10,osa/1.55/0.95,esa/1.55/0.95,
+     awg/1.55/0.95,osc/1.55/0.95,bpd/1.1/1.4,hybrid90/1.45/1.45,
+     adc/1.4/1.0,dac/1.4/1.0,polarizer/0.45/1.0,waveplate/0.45/1.0}{
+    \pgfmathtruncatemacro\col{mod(\i,4)}
+    \pgfmathtruncatemacro\row{floor(\i/4)}
+    \node[\component,label=below:{\small\texttt{\component}}] (special) at (3*\col,-2*\row) {};
+    \pgfmathsetlengthmacro\expectedW{0.85*\w cm}
+    \pgfmathsetlengthmacro\expectedH{0.85*\h cm}
+    \assertdistance{x}{special}{west}{east}{\expectedW}
+    \assertdistance{y}{special}{south}{north}{\expectedH}
+  }
+\end{tikzpicture}
+\end{center}
+
+\newpage
+\noindent Shared arrowhead sizes, fixed ports, and mixed optical/circuit defaults:
+\begin{center}
+\begin{tikzpicture}
+  \checkarrowheadstrue
+  \expectedheadlength=0.085cm \expectedheadwidth=0.102cm
+  \foreach \component [count=\i from 0] in
+    {ld,isolator,polarizer,voa,phaseshifter,vga,bpd,circulator}{
+    \pgfmathtruncatemacro\col{mod(\i,4)}
+    \pgfmathtruncatemacro\row{floor(\i/4)}
+    \node[\component,label=below:{\scriptsize\texttt{\component}}] at (3*\col,-1.8*\row) {};
+  }
+  \node[circulator,ccw] at (12,-1.8) {};
+  \node[rfatt,tunable] at (12,0) {};
+  \expectedheadlength=0.0715cm \expectedheadwidth=0.088cm
+  \foreach \component [count=\i from 0] in {nmos,npn,elpd,elld,isource}{
+    \node[\component,label=below:{\small\texttt{\component}}] at (2*\i,-4.1) {};
+  }
+  \node[resistor,tunable] at (10,-4.1) {};
+  \node[capacitor,tunable] at (12,-4.1) {};
+  % Heads still match after explicit dimension changes and per-node scaling.
+  \expectedheadlength=0.03575cm \expectedheadwidth=0.044cm
+  \node[nmos,commtikz scale=0.5] at (0,-5.8) {};
+  \node[npn,commtikz scale=0.5] at (2,-5.8) {};
+  \node[nmos,width=0.3575cm,height=0.4125cm] at (4,-5.8) {};
+  \node[npn,width=0.3575cm,height=0.4125cm] at (6,-5.8) {};
+  \checkarrowheadsfalse
+  \node[opamp,mirror flip] (flipped) at (10,-5.8) {};
+  \node[opamp] at (12,-5.8) {};
+  \assertdistance{y}{flipped}{in+}{W0}{0pt}
+  \assertdistance{y}{flipped}{in-}{W1}{0pt}
+
+  \node[commrect] (square) at (0,-7.5) {};
+  \assertdistance{x}{square}{west}{east}{0.85cm}
+  \node[commcircle] (circle) at (2,-7.5) {};
+  \assertdistance{x}{circle}{west}{east}{0.85cm}
+  \node[isource] (current) at (4,-7.5) {};
+  \assertdistance{x}{current}{west}{east}{0.836cm}
+  \node[nmos] (transistor) at (6,-7.5) {};
+  \assertdistance{x}{transistor}{west}{center}{0.3575cm}
+  \node[fiberspool] (spool) at (8,-7.5) {};
+  \assertdistance{x}{spool}{west}{east}{1.105cm}
+  \node[polctrl] at (10,-7.5) {};
+  \node[waveplate] at (12,-7.5) {};
+
+  \node[ringmod,add drop] (ring) at (1,-10) {};
+  \node[commrect,numW=3,numE=3,port order=bottom to top] at (4,-10) {};
+  \node[splitter,numN=2,port span y=1] at (7,-10) {};
+  % Saved ring mode and geometry must survive a later node's different options.
+  \node[ringmod] at (10,-10) {};
+  \assertdistance{x}{ring}{bus in}{bus out}{0.85cm}
+  \assertdistance{x}{ring}{drop in}{drop out}{0.85cm}
+  \assertdistance{y}{ring}{bus in}{drop in}{0.238cm}
+  \draw[opt] (-0.5,-10) -- (ring.bus in);
+  \draw[opt] (ring.bus out) -- (2.5,-10);
+  \draw[optrf] (ring.drop in) -- ++(-1,0);
+  \draw[optrf] (ring.drop out) -- ++(1,0);
+  \node[elpd] (light) at (0,-12.5) {};
+  \assertdistance{y}{light}{center}{north}{0.3553cm}
+  \node[elld,above=3mm of light] {};
+  \node[commrect,commtikz legacy sizes] (legacy) at (4,-12.5) {};
+  \assertdistance{x}{legacy}{west}{east}{1cm}
+  \node[commrect,commtikz block scale=1.2] (larger) at (7,-12.5) {};
+  \assertdistance{x}{larger}{west}{east}{1.2cm}
+  \node[commtikz circuit scale=1.2,nmos] (largecircuit) at (10,-12.5) {};
+  \assertdistance{x}{largecircuit}{west}{center}{0.39cm}
+\end{tikzpicture}
+\end{center}
+
+\newpage
+\noindent Component label clearance and optical-arrow bounds:
+\begin{center}
+\begin{tikzpicture}
+  \node[elpd,rotate=90,transform shape,
+    label={[name=lp,inner sep=0pt,outer sep=0pt]above:PD}] (p) at (1,0) {};
+  \assertgap{x}{lp}{east}{p}{north}{3pt}
+  \assertdistance{x}{p}{north}{90}{0pt}
+  \node[elld,rotate=90,transform shape,
+    label={[name=ll,inner sep=0pt,outer sep=0pt]above:LED}] (l) at (4,0) {};
+  \assertgap{x}{ll}{east}{l}{north}{3pt}
+  \assertdistance{x}{l}{north}{90}{0pt}
+  \node[pd,label={[name=lb,inner sep=0pt,outer sep=0pt]above:PD}] (b) at (7,0) {};
+  \assertgap{y}{b}{north}{lb}{south}{3pt}
+  \node[commcircle,label={[name=lc,inner sep=0pt,outer sep=0pt]above:Circle}] (c) at (10,0) {};
+  \assertgap{y}{c}{north}{lc}{south}{3pt}
+  \node[mux,label={[name=lm,inner sep=0pt,outer sep=0pt]above:Mux}] (m) at (1,-3) {};
+  \assertgap{y}{m}{north}{lm}{south}{3pt}
+  \node[elpd,label={[name=lu,inner sep=0pt,outer sep=0pt]above:PD}] (u) at (4,-3) {};
+  \assertgap{y}{u}{north}{lu}{south}{3pt}
+  \assertdistance{y}{u}{north}{90}{0pt}
+  \begin{scope}[commtikz label distance=6pt]
+    \node[pd,label={[name=ls,inner sep=0pt,outer sep=0pt]above:Scoped}] (s) at (7,-3) {};
+    \assertgap{y}{s}{north}{ls}{south}{6pt}
+    % The component setting must not change labels on ordinary TikZ nodes.
+    \node[rectangle,draw,minimum size=8mm,inner sep=0pt,outer sep=0pt,
+      label={[name=lg,inner sep=0pt,outer sep=0pt]above:Native}] (g) at (10,-3) {};
+    \assertgap{y}{g}{north}{lg}{south}{0pt}
+  \end{scope}
+  \node[pd,commtikz label distance=7pt,
+    label={[name=ln,inner sep=0pt,outer sep=0pt]above:Node override}] (n) at (4,-6) {};
+  \assertgap{y}{n}{north}{ln}{south}{7pt}
+  \node[pd,label={[name=lo,label distance=1pt,inner sep=0pt,outer sep=0pt]above:Label override}] (o) at (7,-6) {};
+  \assertgap{y}{o}{north}{lo}{south}{1pt}
+\end{tikzpicture}
+\end{center}
+\typeout{commtikz component checks passed.}
+\end{document}

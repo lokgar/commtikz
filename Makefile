@@ -4,11 +4,14 @@ LATEX    ?= pdflatex
 LATEXFLAGS ?= -interaction=nonstopmode -halt-on-error
 DOC      := commtikz-doc
 
-.PHONY: all doc clean distclean
+.PHONY: all doc check clean distclean
 
 all: doc
 
 doc: $(DOC).pdf
+
+check:
+	LATEX="$(LATEX)" LATEXFLAGS="$(LATEXFLAGS)" python3 tests/check.py
 
 $(DOC).pdf: $(DOC).tex commtikz.sty tikzlibrarycommtikz.code.tex \
             tikzlibrarycommtikz.base.code.tex \

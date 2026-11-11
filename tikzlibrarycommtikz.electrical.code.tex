@@ -56,7 +56,7 @@
       \pgfusepath{stroke}%
     \fi
     \ifnum\pgfkeysvalueof{/tikz/commtikz/tunable}=1\relax
-      \commtikz@drawarrow{-0.65\commtikz@hw}{-0.95\commtikz@hh}{0.65\commtikz@hw}{0.95\commtikz@hh}{0.13\commtikz@u}{0.09\commtikz@u}%
+      \commtikz@drawopenarrow{-0.65\commtikz@hw}{-0.95\commtikz@hh}{0.65\commtikz@hw}{0.95\commtikz@hh}%
     \fi
   }
 }
@@ -87,7 +87,7 @@
     \pgfpathlineto{\pgfpoint{\commtikz@hw}{0pt}}%
     \pgfusepath{stroke}%
     \ifnum\pgfkeysvalueof{/tikz/commtikz/tunable}=1\relax
-      \commtikz@drawarrow{-0.75\commtikz@hw}{-0.80\commtikz@hh}{0.75\commtikz@hw}{0.80\commtikz@hh}{0.13\commtikz@u}{0.09\commtikz@u}%
+      \commtikz@drawopenarrow{-0.75\commtikz@hw}{-0.80\commtikz@hh}{0.75\commtikz@hw}{0.80\commtikz@hh}%
     \fi
   }
 }
@@ -156,27 +156,58 @@
   }
 }
 
+% Numeric border anchors and labels must include the optical arrows, including
+% after rotation. Port anchors still identify the electrical leads.
+\def\commtikz@optodiodeborder{%
+  \pgf@xa=\pgf@x\relax
+  \pgf@ya=\pgf@y\relax
+  \commtikz@rectparams
+  \commtikz@phh=\commtikz@hh\relax
+  \ifdim\pgf@ya>0pt
+    \commtikz@phh=1.70\commtikz@hh\relax
+  \fi
+  \pgfpointborderrectangle{\pgfpoint{\pgf@xa}{\pgf@ya}}{\pgfpoint{\commtikz@hw}{\commtikz@phh}}%
+}
+
 \pgfdeclareshape{commtikz_elpd}{
   \commtikz@inheritrectanchors{commrect}
   \inheritbackgroundpath[from=commtikz_diode]
+  \anchorborder{\commtikz@optodiodeborder}
+
+  \anchor{north}{\commtikz@rectparams\pgfpoint{0pt}{1.70\commtikz@hh}}
+  \anchor{N}{\commtikz@rectparams\pgfpoint{0pt}{1.70\commtikz@hh}}
+  \anchor{N0}{\commtikz@rectparams\pgfpoint{0pt}{1.70\commtikz@hh}}
+  \anchor{north east}{\commtikz@rectparams\pgfpoint{\commtikz@hw}{1.70\commtikz@hh}}
+  \anchor{NE}{\commtikz@rectparams\pgfpoint{\commtikz@hw}{1.70\commtikz@hh}}
+  \anchor{north west}{\commtikz@rectparams\pgfpoint{-\commtikz@hw}{1.70\commtikz@hh}}
+  \anchor{NW}{\commtikz@rectparams\pgfpoint{-\commtikz@hw}{1.70\commtikz@hh}}
 
   \beforebackgroundpath{%
     \commtikz@rectparams
     % Two incoming optical arrows above the diode
-    \commtikz@drawarrow{-0.35\commtikz@hw}{1.35\commtikz@hh}{-0.05\commtikz@hw}{0.72\commtikz@hh}{0.12\commtikz@u}{0.075\commtikz@u}%
-    \commtikz@drawarrow{0.05\commtikz@hw}{1.35\commtikz@hh}{0.35\commtikz@hw}{0.72\commtikz@hh}{0.12\commtikz@u}{0.075\commtikz@u}%
+    \commtikz@drawopenarrow{-0.35\commtikz@hw}{1.65\commtikz@hh}{-0.05\commtikz@hw}{1.02\commtikz@hh}%
+    \commtikz@drawopenarrow{0.05\commtikz@hw}{1.65\commtikz@hh}{0.35\commtikz@hw}{1.02\commtikz@hh}%
   }
 }
 
 \pgfdeclareshape{commtikz_elld}{
   \commtikz@inheritrectanchors{commrect}
   \inheritbackgroundpath[from=commtikz_diode]
+  \anchorborder{\commtikz@optodiodeborder}
+
+  \anchor{north}{\commtikz@rectparams\pgfpoint{0pt}{1.70\commtikz@hh}}
+  \anchor{N}{\commtikz@rectparams\pgfpoint{0pt}{1.70\commtikz@hh}}
+  \anchor{N0}{\commtikz@rectparams\pgfpoint{0pt}{1.70\commtikz@hh}}
+  \anchor{north east}{\commtikz@rectparams\pgfpoint{\commtikz@hw}{1.70\commtikz@hh}}
+  \anchor{NE}{\commtikz@rectparams\pgfpoint{\commtikz@hw}{1.70\commtikz@hh}}
+  \anchor{north west}{\commtikz@rectparams\pgfpoint{-\commtikz@hw}{1.70\commtikz@hh}}
+  \anchor{NW}{\commtikz@rectparams\pgfpoint{-\commtikz@hw}{1.70\commtikz@hh}}
 
   \beforebackgroundpath{%
     \commtikz@rectparams
     % Two outgoing optical arrows above the diode
-    \commtikz@drawarrow{-0.25\commtikz@hw}{0.72\commtikz@hh}{0.08\commtikz@hw}{1.35\commtikz@hh}{0.12\commtikz@u}{0.075\commtikz@u}%
-    \commtikz@drawarrow{0.12\commtikz@hw}{0.72\commtikz@hh}{0.45\commtikz@hw}{1.35\commtikz@hh}{0.12\commtikz@u}{0.075\commtikz@u}%
+    \commtikz@drawopenarrow{-0.25\commtikz@hw}{1.02\commtikz@hh}{0.08\commtikz@hw}{1.65\commtikz@hh}%
+    \commtikz@drawopenarrow{0.12\commtikz@hw}{1.02\commtikz@hh}{0.45\commtikz@hw}{1.65\commtikz@hh}%
   }
 }
 
@@ -206,7 +237,7 @@
 
   \beforebackgroundpath{%
     \commtikz@circparams
-    \commtikz@drawarrow{-0.58\commtikz@r}{0pt}{0.58\commtikz@r}{0pt}{0.18\commtikz@u}{0.12\commtikz@u}%
+    \commtikz@drawopenarrow{-0.58\commtikz@r}{0pt}{0.58\commtikz@r}{0pt}%
   }
 }
 
@@ -272,8 +303,26 @@
 \pgfdeclareshape{commtikz_opamp}{
   \commtikz@inheritrectanchors{commrect}
 
-  \anchor{in-}{\csname pgf@anchor@commtikz_opamp@W0\endcsname}
-  \anchor{in+}{\csname pgf@anchor@commtikz_opamp@W1\endcsname}
+  \savedmacro\commtikz@savedopamp{%
+    \edef\commtikz@saved@opampflip{\pgfkeysvalueof{/tikz/commtikz/flip}}%
+    \addtosavedmacro\commtikz@saved@opampflip
+  }
+  \anchor{in-}{%
+    \commtikz@savedopamp
+    \ifnum\commtikz@saved@opampflip=1\relax
+      \csname pgf@anchor@commtikz_opamp@W1\endcsname
+    \else
+      \csname pgf@anchor@commtikz_opamp@W0\endcsname
+    \fi
+  }
+  \anchor{in+}{%
+    \commtikz@savedopamp
+    \ifnum\commtikz@saved@opampflip=1\relax
+      \csname pgf@anchor@commtikz_opamp@W0\endcsname
+    \else
+      \csname pgf@anchor@commtikz_opamp@W1\endcsname
+    \fi
+  }
   \anchor{out}{\csname pgf@anchor@commtikz_opamp@E0\endcsname}
   \anchor{north}{\commtikz@rectparams\pgfpoint{-0.20\commtikz@hw}{0.60\commtikz@hh}}
   \anchor{N0}{\commtikz@rectparams\pgfpoint{-0.20\commtikz@hw}{0.60\commtikz@hh}}
@@ -347,7 +396,7 @@
     \pgfpathlineto{\pgfpoint{0.50\commtikz@hw}{-\commtikz@hh}}%
     \pgfusepath{stroke}%
     % Source arrow
-    \commtikz@drawarrow{-0.10\commtikz@hw}{-0.45\commtikz@hh}{0.46\commtikz@hw}{-0.45\commtikz@hh}{0.11\commtikz@u}{0.075\commtikz@u}%
+    \commtikz@drawopenarrow{-0.10\commtikz@hw}{-0.45\commtikz@hh}{0.46\commtikz@hw}{-0.45\commtikz@hh}%
   }
 }
 
@@ -380,7 +429,7 @@
     \pgfpathlineto{\pgfpoint{0.50\commtikz@hw}{-\commtikz@hh}}%
     \pgfusepath{stroke}%
     % Emitter diagonal arrow from base bar to emitter stub
-    \commtikz@drawarrow{-0.20\commtikz@hw}{-0.22\commtikz@hh}{0.50\commtikz@hw}{-0.65\commtikz@hh}{0.12\commtikz@u}{0.08\commtikz@u}%
+    \commtikz@drawopenarrow{-0.20\commtikz@hw}{-0.22\commtikz@hh}{0.50\commtikz@hw}{-0.65\commtikz@hh}%
   }
 }
 
@@ -389,57 +438,57 @@
 % ==============================================================================
 \tikzset{
   % Passive components
-  resistor/.style={shape=commtikz_resistor, commtikz bare node, width=0.80, height=0.32},
+  resistor/.style={shape=commtikz_resistor, commtikz bare node, commtikz circuit node, width=0.80, height=0.32, commtikz arrow reference=0.80/0.32},
   R/.style={resistor, #1},
   R/.default={},
   rbox/.style={resistor, iec resistor=true, #1},
   rbox/.default={},
-  capacitor/.style={shape=commtikz_capacitor, commtikz bare node, width=0.55, height=0.42},
+  capacitor/.style={shape=commtikz_capacitor, commtikz bare node, commtikz circuit node, width=0.55, height=0.42, commtikz arrow reference=0.55/0.42},
   C/.style={capacitor, #1},
   C/.default={},
-  inductor/.style={shape=commtikz_inductor, commtikz bare node, width=0.85, height=0.38},
+  inductor/.style={shape=commtikz_inductor, commtikz bare node, commtikz circuit node, width=0.85, height=0.38, commtikz arrow reference=0.85/0.38},
   L/.style={inductor, #1},
   L/.default={},
   % Diodes
-  diode/.style={shape=commtikz_diode, commtikz bare node, width=0.65, height=0.38},
+  diode/.style={shape=commtikz_diode, commtikz bare node, commtikz circuit node, width=0.65, height=0.38, commtikz arrow reference=0.65/0.38},
   D/.style={diode, #1},
   D/.default={},
   zener/.style={diode, zener diode=true, #1},
   zener/.default={},
-  elpd/.style={shape=commtikz_elpd, commtikz bare node, width=0.65, height=0.38},
+  elpd/.style={shape=commtikz_elpd, commtikz bare node, commtikz circuit node, width=0.65, height=0.38, commtikz arrow reference=0.65/0.38},
   cktpd/.style={elpd, #1},
   cktpd/.default={},
-  elld/.style={shape=commtikz_elld, commtikz bare node, width=0.65, height=0.38},
+  elld/.style={shape=commtikz_elld, commtikz bare node, commtikz circuit node, width=0.65, height=0.38, commtikz arrow reference=0.65/0.38},
   led/.style={elld, #1},
   led/.default={},
   % Sources
-  vsource/.style={shape=commtikz_vsource, commtikz base node, comp radius=0.38},
+  vsource/.style={shape=commtikz_vsource, commtikz base node, commtikz circuit node, comp radius=0.38, commtikz arrow reference=0.76/0.76},
   dcvoltage/.style={vsource, #1},
   dcvoltage/.default={},
-  isource/.style={shape=commtikz_isource, commtikz base node, comp radius=0.38},
+  isource/.style={shape=commtikz_isource, commtikz base node, commtikz circuit node, comp radius=0.38, commtikz arrow reference=0.76/0.76},
   dccurrent/.style={isource, #1},
   dccurrent/.default={},
-  acsource/.style={shape=commtikz_acsource, commtikz base node, comp radius=0.38},
+  acsource/.style={shape=commtikz_acsource, commtikz base node, commtikz circuit node, comp radius=0.38, commtikz arrow reference=0.76/0.76},
   rfsource/.style={acsource, #1},
   rfsource/.default={},
   % Grounds, Supply Rails & Nodes
-  ground/.style={shape=commtikz_ground, commtikz bare node, width=0.42, height=0.30, anchor=north},
+  ground/.style={shape=commtikz_ground, commtikz bare node, commtikz circuit node, width=0.42, height=0.30, commtikz arrow reference=0.42/0.30, anchor=north},
   gnd/.style={ground, #1},
   gnd/.default={},
-  vcc/.style={shape=commtikz_vcc, commtikz bare node, width=0.40, height=0.28, anchor=south},
+  vcc/.style={shape=commtikz_vcc, commtikz bare node, commtikz circuit node, width=0.40, height=0.28, commtikz arrow reference=0.40/0.28, anchor=south},
   vdd/.style={vcc, #1},
   vdd/.default={},
   edot/.style={circle, fill=black, draw=black, minimum size=3.0pt, inner sep=0pt, outer sep=0pt},
   junction/.style={edot, #1},
   junction/.default={},
   % Active blocks & Transistors
-  opamp/.style={shape=commtikz_opamp, commtikz base node, width=1.00, height=1.05, numW=2, numE=1},
+  opamp/.style={shape=commtikz_opamp, commtikz base node, commtikz circuit node, width=1.00, height=1.05, commtikz arrow reference=1.00/1.05, numW=2, numE=1, commtikz fixed ports=2/1},
   tia/.style={opamp, #1},
   tia/.default={},
-  nmos/.style={shape=commtikz_nmos, commtikz bare node, width=0.65, height=0.75},
+  nmos/.style={shape=commtikz_nmos, commtikz bare node, commtikz circuit node, width=0.65, height=0.75, commtikz arrow reference=0.65/0.75},
   fet/.style={nmos, #1},
   fet/.default={},
-  npn/.style={shape=commtikz_npn, commtikz bare node, width=0.65, height=0.75},
+  npn/.style={shape=commtikz_npn, commtikz bare node, commtikz circuit node, width=0.65, height=0.75, commtikz arrow reference=0.65/0.75},
   bjt/.style={npn, #1},
   bjt/.default={},
   % Inline path placement shorthands

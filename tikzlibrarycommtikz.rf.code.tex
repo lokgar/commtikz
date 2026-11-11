@@ -16,63 +16,48 @@
 }
 
 % ==============================================================================
-% 1. Amp & VGA (Triangle Amplifier / Variable Gain Amplifier / EDFA / SOA)
+% 1. Amp & VGA (Boxed Amplifier / Variable Gain Amplifier / EDFA / SOA)
 % ==============================================================================
 \pgfdeclareshape{commtikz_amp}{
   \commtikz@inheritrectanchors{commrect}
+  \inheritbackgroundpath[from=commrect]
 
-  \savedanchor\amptextpoint{%
-    \pgfmathsetlength\commtikz@u{\pgfkeysvalueof{/tikz/commtikz/unit}}%
-    \pgfmathparse{\pgfkeysvalueof{/tikz/commtikz/width}}%
-    \ifpgfmathunitsdeclared
-      \pgfmathsetlength\commtikz@hw{0.5 * \pgfmathresult pt}%
-    \else
-      \pgfmathsetlength\commtikz@hw{0.5 * \pgfmathresult * \commtikz@u}%
-    \fi
-    \pgf@x=-0.30\commtikz@hw\relax
-    \advance\pgf@x by -0.5\wd\pgfnodeparttextbox\relax
-    \pgf@y=-0.5\ht\pgfnodeparttextbox\relax
-    \advance\pgf@y by 0.5\dp\pgfnodeparttextbox\relax
+  \savedmacro\commtikz@savedamp{%
+    \edef\commtikz@saved@tuneup{\pgfkeysvalueof{/tikz/commtikz/tuneup}}%
+    \addtosavedmacro\commtikz@saved@tuneup
   }
-  \anchor{text}{\amptextpoint}
-
-  % Slanted edge midpoint anchors for north/south
-  \anchor{north}{\commtikz@rectparams\pgfpoint{0pt}{0.5\commtikz@hh}}
-  \anchor{south}{\commtikz@rectparams\pgfpoint{0pt}{-0.5\commtikz@hh}}
-  \anchor{N}{\commtikz@rectparams\pgfpoint{0pt}{0.5\commtikz@hh}}
-  \anchor{S}{\commtikz@rectparams\pgfpoint{0pt}{-0.5\commtikz@hh}}
-  \anchor{N0}{\commtikz@rectparams\pgfpoint{0pt}{0.5\commtikz@hh}}
-  \anchor{S0}{\commtikz@rectparams\pgfpoint{0pt}{-0.5\commtikz@hh}}
   \anchor{tune}{%
     \commtikz@rectparams
-    \ifnum\pgfkeysvalueof{/tikz/commtikz/tuneup}=1\relax
-      \pgfpoint{-0.1333\commtikz@hw}{\commtikz@hh}%
+    \commtikz@savedamp
+    \ifnum\commtikz@saved@tuneup=1\relax
+      \pgfpoint{0pt}{\commtikz@hh}%
     \else
-      \pgfpoint{-0.1333\commtikz@hw}{-\commtikz@hh}%
-    \fi
-  }
-
-  \backgroundpath{%
-    \commtikz@rectparams
-    \ifnum\pgfkeysvalueof{/tikz/commtikz/flip}=1\relax
-      \pgfpathmoveto{\pgfpoint{\commtikz@hw}{-\commtikz@hh}}%
-      \pgfpathlineto{\pgfpoint{-\commtikz@hw}{0pt}}%
-      \pgfpathlineto{\pgfpoint{\commtikz@hw}{\commtikz@hh}}%
-      \pgfpathclose
-    \else
-      \pgfpathmoveto{\pgfpoint{-\commtikz@hw}{-\commtikz@hh}}%
-      \pgfpathlineto{\pgfpoint{\commtikz@hw}{0pt}}%
-      \pgfpathlineto{\pgfpoint{-\commtikz@hw}{\commtikz@hh}}%
-      \pgfpathclose
+      \pgfpoint{0pt}{-\commtikz@hh}%
     \fi
   }
 
   \beforebackgroundpath{%
     \commtikz@rectparams
+    \pgfscope
+      \ifnum\pgfkeysvalueof{/tikz/commtikz/flip}=1\relax
+        \pgftransformxscale{-1}%
+      \fi
+      % Near-equilateral triangle (width/base-height = 1.18/1.36).
+      % Signal leads meet the square's normal W0/E0 anchors.
+      \pgfpathmoveto{\pgfpoint{-\commtikz@hw}{0pt}}%
+      \pgfpathlineto{\pgfpoint{-0.58\commtikz@hw}{0pt}}%
+      \pgfpathmoveto{\pgfpoint{0.60\commtikz@hw}{0pt}}%
+      \pgfpathlineto{\pgfpoint{\commtikz@hw}{0pt}}%
+      \pgfpathmoveto{\pgfpoint{-0.58\commtikz@hw}{-0.68\commtikz@hh}}%
+      \pgfpathlineto{\pgfpoint{0.60\commtikz@hw}{0pt}}%
+      \pgfpathlineto{\pgfpoint{-0.58\commtikz@hw}{0.68\commtikz@hh}}%
+      \pgfpathclose
+      \pgfusepath{stroke}%
+    \endpgfscope
     \ifnum\pgfkeysvalueof{/tikz/commtikz/tunable}=1\relax
-      \commtikz@drawarrow{-1.20\commtikz@hw}{-\commtikz@hh}{1.00\commtikz@hw}{\commtikz@hh}{0.16\commtikz@u}{0.11\commtikz@u}%
+      \commtikz@drawopenarrow{-0.78\commtikz@hw}{-0.78\commtikz@hh}{0.78\commtikz@hw}{0.78\commtikz@hh}%
     \fi
-    \commtikz@drawcomplabel{-0.30\commtikz@hw}{0pt}%
+    \commtikz@drawcomplabel{0pt}{0pt}%
   }
 }
 
@@ -361,7 +346,7 @@
     \pgfpathlineto{\pgfpoint{0.80\commtikz@hw}{0pt}}%
     \pgfusepath{stroke}%
     \ifnum\pgfkeysvalueof{/tikz/commtikz/tunable}=1\relax
-      \commtikz@drawarrow{-0.65\commtikz@hw}{-0.65\commtikz@hh}{0.65\commtikz@hw}{0.65\commtikz@hh}{0.13\commtikz@u}{0.09\commtikz@u}%
+      \commtikz@drawopenarrow{-0.65\commtikz@hw}{-0.65\commtikz@hh}{0.65\commtikz@hw}{0.65\commtikz@hh}%
     \fi
   }
 }
@@ -398,11 +383,11 @@
 % 7. User-facing TikZ Styles for RF, Analog & DSP Components
 % ==============================================================================
 \tikzset{
-  amp/.style={shape=commtikz_amp, commtikz base node, width=0.75, height=1.0},
-  vga/.style={shape=commtikz_amp, commtikz base node, width=0.75, height=1.0, tunable=true},
-  edfa/.style={shape=commtikz_amp, commtikz base node, width=0.80, height=1.0},
-  soa/.style={shape=commtikz_amp, commtikz base node, width=0.80, height=1.0},
-  filter/.style={shape=commtikz_filter, commtikz base node, width=1.0, height=1.0},
+  amp/.style={shape=commtikz_amp, commtikz square node},
+  vga/.style={shape=commtikz_amp, commtikz square node, tunable=true},
+  edfa/.style={shape=commtikz_amp, commtikz square node},
+  soa/.style={shape=commtikz_amp, commtikz square node},
+  filter/.style={shape=commtikz_filter, commtikz square node},
   lpf/.style={filter, response=lp},
   bpf/.style={filter, response=bp},
   hpf/.style={filter, response=hp},
@@ -417,10 +402,10 @@
   oscillator/.style={shape=commtikz_oscillator, commtikz base node, comp radius=0.5},
   lo/.style={oscillator, #1},
   lo/.default={},
-  oscillatorbox/.style={shape=commtikz_oscillatorbox, commtikz base node, width=1.0, height=1.0},
-  demod/.style={shape=commtikz_demod, commtikz base node, width=1.0, height=1.0},
-  biastee/.style={shape=commtikz_biastee, commtikz base node, width=1.0, height=1.0},
-  rfatt/.style={shape=commtikz_rfatt, commtikz base node, width=1.0, height=1.0},
+  oscillatorbox/.style={shape=commtikz_oscillatorbox, commtikz square node},
+  demod/.style={shape=commtikz_demod, commtikz square node},
+  biastee/.style={shape=commtikz_biastee, commtikz square node},
+  rfatt/.style={shape=commtikz_rfatt, commtikz square node},
   termination/.style={shape=commtikz_termination, commtikz bare node, width=0.2, height=0.2},
   term/.style={termination, #1},
   term/.default={},

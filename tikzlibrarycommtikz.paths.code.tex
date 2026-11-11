@@ -253,7 +253,21 @@
   % ==============================================================================
   % 4. Inline Component Placement along Paths: to[inline={...}]
   % ==============================================================================
-  commtikz save path color/.code={\let\commtikz@saved@pathcolor=\tikz@strokecolor},
+  commtikz save path color/.code={%
+    % Resolve deferred color options in the path's scope, before node options
+    % reset the stroke. This also handles color=... and color shorthands.
+    \pgfinterruptpath
+    \pgfscope
+      \tikz@options
+      % TikZ's bare color shorthands update the driver stroke state without
+      % updating the pgfstrokecolor alias. Read the resolved driver color.
+      \expandafter\let\csname\string\color@commtikz@resolved\endcsname\pgf@strokecolor@global
+      \extractcolorspec{commtikz@resolved}{\commtikz@pathspec}%
+      \edef\commtikz@next{\noexpand\endpgfscope\noexpand\endpgfinterruptpath
+        \noexpand\definecolor{commtikz@pathcolor}\commtikz@pathspec}%
+    \commtikz@next
+    \def\commtikz@saved@pathcolor{commtikz@pathcolor}%
+  },
   commtikz use path color/.code={%
     \ifx\commtikz@saved@pathcolor\pgfutil@empty
       \tikzset{draw=black}%
@@ -263,10 +277,11 @@
   },
   inline/.style={
     to path={
+      \pgfextra{\tikzset{commtikz save path color}}%
       let \p{commtikz@d} = ($(\tikztotarget)-(\tikztostart)$),
           \n{commtikz@ang} = {atan2(\y{commtikz@d},\x{commtikz@d})} in
       node[at={($(\tikztostart)!0.5!(\tikztotarget)$)}, rotate=\n{commtikz@ang}, transform shape,
-           commtikz save path color, solid, draw=black, text=black, name=commtikz@tmp@inline, #1, alias=commtikz@tmp@inline] {}
+           solid, draw=black, text=black, name=commtikz@tmp@inline, #1, alias=commtikz@tmp@inline] {}
       (\tikztostart) -- (commtikz@tmp@inline.west)
       (commtikz@tmp@inline.east) -- (\tikztotarget)
       \tikztonodes
@@ -274,14 +289,19 @@
   },
   inline upright/.style={
     to path={
+      \pgfextra{\tikzset{commtikz save path color}}%
       node[at={($(\tikztostart)!0.5!(\tikztotarget)$)},
-           commtikz save path color, solid, draw=black, text=black, name=commtikz@tmp@inline, #1, alias=commtikz@tmp@inline] {}
+           solid, draw=black, text=black, name=commtikz@tmp@inline, #1, alias=commtikz@tmp@inline] {}
       (\tikztostart) -- (commtikz@tmp@inline.west)
       (commtikz@tmp@inline.east) -- (\tikztotarget)
       \tikztonodes
     }
   },
   % Convenient inline shorthands
+  to coupler/.style={inline={coupler, commtikz use path color, #1}},
+  to coupler/.default={},
+  to couplercirc/.style={inline={couplercirc, commtikz use path color, #1}},
+  to couplercirc/.default={},
   to fiber/.style={inline={fiber, commtikz use path color, #1}},
   to fiber/.default={},
   to fiberspool/.style={inline={fiberspool, commtikz use path color, #1}},

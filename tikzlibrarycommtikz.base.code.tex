@@ -8,6 +8,15 @@
   /tikz/commtikz/.is family,
   /tikz/commtikz/.cd,
   unit/.initial=1cm,
+  block scale/.initial=0.85,
+  circuit scale/.initial=1.10,
+  component scale/.initial=1,
+  arrow length/.initial=0.10,
+  arrow width/.initial=0.12,
+  arrow nominal width/.initial=1,
+  arrow nominal height/.initial=1,
+  fixed W/.initial={},
+  fixed E/.initial={},
   width/.initial=1,
   height/.initial=1,
   height1/.initial=2.2,
@@ -24,6 +33,7 @@
   line width/.initial=0.6pt,
   inner line width/.initial=0.45pt,
   signal line width/.initial=0.6pt,
+  label distance/.initial=3pt,
   fill/.initial=white,
   comp label/.initial={},
   sublabel I/.initial={I},
@@ -51,6 +61,21 @@
 
 % Top-level /tikz convenience keys so users can pass them directly on nodes
 \tikzset{
+  commtikz block scale/.style={/tikz/commtikz/block scale=#1},
+  commtikz circuit scale/.style={/tikz/commtikz/circuit scale=#1},
+  commtikz legacy sizes/.style={commtikz block scale=1, commtikz circuit scale=1},
+  commtikz circuit node/.style={
+    /tikz/commtikz/component scale=\pgfkeysvalueof{/tikz/commtikz/circuit scale},
+    /tikz/commtikz/arrow length=0.065,
+    /tikz/commtikz/arrow width=0.080,
+  },
+  commtikz arrow reference/.style args={#1/#2}{
+    /tikz/commtikz/arrow nominal width=#1,
+    /tikz/commtikz/arrow nominal height=#2,
+  },
+  commtikz fixed ports/.style args={#1/#2}{
+    /tikz/commtikz/fixed W=#1, /tikz/commtikz/fixed E=#2,
+  },
   commtikz unit/.style={/tikz/commtikz/unit=#1},
   commtikz scale/.style={/tikz/commtikz/unit=\the\dimexpr#1\dimexpr1cm\relax\relax},
   commtikz line width/.style={
@@ -61,6 +86,7 @@
   commtikz block line width/.style={/tikz/commtikz/line width=#1},
   commtikz inner line width/.style={/tikz/commtikz/inner line width=#1},
   commtikz signal line width/.style={/tikz/commtikz/signal line width=#1},
+  commtikz label distance/.style={/tikz/commtikz/label distance=#1},
   commtikz match font/.style={commtikz line width=0.055em},
   width/.style={/tikz/commtikz/width=#1},
   height/.style={/tikz/commtikz/height=#1},
@@ -132,6 +158,7 @@
   sector W/.style={/tikz/commtikz/sector W={#1}},
   % Base visual style applied to all commtikz block nodes
   commtikz base node/.style={
+    /tikz/commtikz/component scale=\pgfkeysvalueof{/tikz/commtikz/block scale},
     draw,
     fill=\pgfkeysvalueof{/tikz/commtikz/fill},
     line width=\pgfkeysvalueof{/tikz/commtikz/line width},
@@ -141,6 +168,7 @@
     outer sep=0pt,
   },
   commtikz bare node/.style={
+    /tikz/commtikz/component scale=\pgfkeysvalueof{/tikz/commtikz/block scale},
     draw,
     line width=\pgfkeysvalueof{/tikz/commtikz/line width},
     line cap=butt,
@@ -148,11 +176,37 @@
     inner sep=0pt,
     outer sep=0pt,
   },
+  % Shared default footprint for ordinary square building blocks.
+  commtikz square node/.style={commtikz base node, width=1, height=1},
 }
 
 % ==============================================================================
 % 2. Low-level PGF Helper Macros and Dimension Registers for Shapes
 % ==============================================================================
+% Labels are created after the component's option scope has ended. Save the
+% clearance on the parent shape and apply it only to that shape's labels.
+\def\commtikz@savelabeldistance{%
+  \edef\commtikz@saved@labeldistance{\pgfkeysvalueof{/tikz/commtikz/label distance}}%
+  \addtosavedmacro\commtikz@saved@labeldistance
+}
+\def\commtikz@labeldefaults{%
+  \pgfutil@ifundefined{pgf@sh@ma@\tikzlastnode}{}{%
+    \begingroup
+      \let\commtikz@savedlabel\pgfutil@empty
+      \let\commtikz@saved@labeldistance\pgfutil@empty
+      \csname pgf@sh@ma@\tikzlastnode\endcsname
+      \commtikz@savedlabel
+      \ifx\commtikz@saved@labeldistance\pgfutil@empty
+        \endgroup
+      \else
+        \edef\commtikz@next{\endgroup
+          \noexpand\tikzset{label distance=\commtikz@saved@labeldistance}}%
+        \commtikz@next
+      \fi
+  }%
+}
+\tikzset{every label/.append code={\commtikz@labeldefaults}}
+
 \newdimen\commtikz@u
 \newdimen\commtikz@hw
 \newdimen\commtikz@hh
@@ -198,6 +252,7 @@
 \newdimen\commtikz@rx
 \newdimen\commtikz@ry
 \newdimen\commtikz@sy
+\newdimen\commtikz@arrowunit
 \newdimen\commtikz@arr@xa
 \newdimen\commtikz@arr@ya
 \newdimen\commtikz@arr@xb
@@ -227,33 +282,85 @@
   \fi
 }
 
-% Draw a line from (#1,#2) to (#3,#4) with a sharp filled triangle arrowhead
-% #1=x1, #2=y1, #3=x2, #4=y2, #5=head_length, #6=head_width
-\def\commtikz@drawarrow#1#2#3#4#5#6{%
+% Shared open heads use the component's normalized size, never shaft length.
+% Thus e.g. NMOS and NPN heads match despite differently oriented shafts.
+\def\commtikz@arrowgeometry#1#2#3#4{%
+  \commtikz@arr@xa=\dimexpr#1\relax
+  \commtikz@arr@ya=\dimexpr#2\relax
+  \commtikz@arr@xb=\dimexpr#3\relax
+  \commtikz@arr@yb=\dimexpr#4\relax
+  \commtikz@arr@hl=\pgfkeysvalueof{/tikz/commtikz/arrow length}\commtikz@arrowunit\relax
+  \commtikz@arr@hw=\pgfkeysvalueof{/tikz/commtikz/arrow width}\commtikz@arrowunit\relax
+  \pgfpointnormalised{\pgfpoint{\dimexpr\commtikz@arr@xb-\commtikz@arr@xa\relax}{\dimexpr\commtikz@arr@yb-\commtikz@arr@ya\relax}}%
+  \edef\commtikz@ux{\pgf@sys@tonumber{\pgf@x}}%
+  \edef\commtikz@uy{\pgf@sys@tonumber{\pgf@y}}%
+  \commtikz@bdx=\commtikz@ux\commtikz@arr@hl\relax
+  \commtikz@bdy=\commtikz@uy\commtikz@arr@hl\relax
+  \commtikz@ndx=-0.5\dimexpr\commtikz@uy\commtikz@arr@hw\relax
+  \commtikz@ndy=0.5\dimexpr\commtikz@ux\commtikz@arr@hw\relax
+}
+\def\commtikz@openheadpath{%
+  \pgfpathmoveto{\pgfpoint{\dimexpr\commtikz@arr@xb-\commtikz@bdx+\commtikz@ndx\relax}{\dimexpr\commtikz@arr@yb-\commtikz@bdy+\commtikz@ndy\relax}}%
+  \pgfpathlineto{\pgfpoint{\commtikz@arr@xb}{\commtikz@arr@yb}}%
+  \pgfpathlineto{\pgfpoint{\dimexpr\commtikz@arr@xb-\commtikz@bdx-\commtikz@ndx\relax}{\dimexpr\commtikz@arr@yb-\commtikz@bdy-\commtikz@ndy\relax}}%
+}
+\def\commtikz@drawopenarrow#1#2#3#4{%
   \pgfscope
-    \commtikz@arr@xa=\dimexpr#1\relax
-    \commtikz@arr@ya=\dimexpr#2\relax
-    \commtikz@arr@xb=\dimexpr#3\relax
-    \commtikz@arr@yb=\dimexpr#4\relax
-    \commtikz@arr@hl=\dimexpr#5\relax
-    \commtikz@arr@hw=\dimexpr#6\relax
-    \pgfpointnormalised{\pgfpoint{\dimexpr\commtikz@arr@xb-\commtikz@arr@xa\relax}{\dimexpr\commtikz@arr@yb-\commtikz@arr@ya\relax}}%
-    \edef\commtikz@ux{\pgf@sys@tonumber{\pgf@x}}%
-    \edef\commtikz@uy{\pgf@sys@tonumber{\pgf@y}}%
-    \commtikz@bdx=\commtikz@ux\commtikz@arr@hl\relax
-    \commtikz@bdy=\commtikz@uy\commtikz@arr@hl\relax
-    \commtikz@ndx=-0.5\dimexpr\commtikz@uy\commtikz@arr@hw\relax
-    \commtikz@ndy=0.5\dimexpr\commtikz@ux\commtikz@arr@hw\relax
+    \commtikz@arrowgeometry{#1}{#2}{#3}{#4}%
     \pgfpathmoveto{\pgfpoint{\commtikz@arr@xa}{\commtikz@arr@ya}}%
-    \pgfpathlineto{\pgfpoint{\dimexpr\commtikz@arr@xb - 0.65\commtikz@bdx\relax}{\dimexpr\commtikz@arr@yb - 0.65\commtikz@bdy\relax}}%
+    \pgfpathlineto{\pgfpoint{\commtikz@arr@xb}{\commtikz@arr@yb}}%
+    \commtikz@openheadpath
     \pgfusepath{stroke}%
-    \commtikz@use@strokecolor@as@fill
-    \pgfpathmoveto{\pgfpoint{\commtikz@arr@xb}{\commtikz@arr@yb}}%
-    \pgfpathlineto{\pgfpoint{\dimexpr\commtikz@arr@xb - \commtikz@bdx + \commtikz@ndx\relax}{\dimexpr\commtikz@arr@yb - \commtikz@bdy + \commtikz@ndy\relax}}%
-    \pgfpathlineto{\pgfpoint{\dimexpr\commtikz@arr@xb - \commtikz@bdx - \commtikz@ndx\relax}{\dimexpr\commtikz@arr@yb - \commtikz@bdy - \commtikz@ndy\relax}}%
-    \pgfpathclose
-    \pgfusepath{fill}%
   \endpgfscope
+}
+% Head only, for an existing straight lead or tangent of a curved arrow.
+\def\commtikz@drawopenhead#1#2#3#4{%
+  \pgfscope
+    \commtikz@arrowgeometry{#1}{#2}{#3}{#4}%
+    \commtikz@openheadpath
+    \pgfusepath{stroke}%
+  \endpgfscope
+}
+
+\def\commtikz@setunit{%
+  \pgfmathsetlength\commtikz@u{\pgfkeysvalueof{/tikz/commtikz/unit} * \pgfkeysvalueof{/tikz/commtikz/component scale}}%
+}
+\def\commtikz@savearrowunit{%
+  \pgfmathsetlength\commtikz@arrowunit{min(2*\commtikz@hw/\pgfkeysvalueof{/tikz/commtikz/arrow nominal width},2*\commtikz@hh/\pgfkeysvalueof{/tikz/commtikz/arrow nominal height})}%
+  \edef\commtikz@saved@arrowunit{\the\commtikz@arrowunit}%
+  \addtosavedmacro\commtikz@saved@arrowunit
+}
+% Validate the final options, so later numW/ports/port-order overrides cannot
+% silently move anchors away from the fixed internal waveguide topology.
+\def\commtikz@validatefixedports{%
+  \pgfkeysgetvalue{/tikz/commtikz/fixed W}{\commtikz@fixedW}%
+  \pgfkeysgetvalue{/tikz/commtikz/fixed E}{\commtikz@fixedE}%
+  \def\commtikz@saved@fixedports{0}%
+  \ifx\commtikz@fixedW\pgfutil@empty\else
+    \def\commtikz@saved@fixedports{1}%
+    \ifnum\pgfkeysvalueof{/tikz/commtikz/numW}=\commtikz@fixedW\relax\else
+      \PackageError{commtikz}{Fixed topology requires numW=\commtikz@fixedW}{Use the documented port counts for this component.}%
+    \fi
+    \ifnum\pgfkeysvalueof{/tikz/commtikz/numE}=\commtikz@fixedE\relax\else
+      \PackageError{commtikz}{Fixed topology requires numE=\commtikz@fixedE}{Use the documented port counts for this component.}%
+    \fi
+    \ifnum\pgfkeysvalueof{/tikz/commtikz/port order}=1\relax\else
+      \PackageError{commtikz}{Fixed topology requires top-to-bottom port order}{Use port order=top to bottom.}%
+    \fi
+    \pgfmathsetlength\pgf@x{abs(\commtikz@phh-\commtikz@hh)}%
+    \ifdim\pgf@x>0.01pt
+      \PackageError{commtikz}{Fixed topology requires full-height port span}{Remove port span y or set it equal to the block height.}%
+    \fi
+  \fi
+  \addtosavedmacro\commtikz@saved@fixedports
+}
+
+\def\commtikz@checkportindex#1#2{%
+  \ifnum\commtikz@saved@fixedports=1\relax
+    \ifnum#2<\csname commtikz@num#1\endcsname\relax\else
+      \PackageError{commtikz}{Port #1#2 is outside this fixed topology}{Use the documented ports for this component.}%
+    \fi
+  \fi
 }
 
 % Draw default component label at (#1,#2) if node text box is empty
@@ -279,21 +386,25 @@
 \def\commtikz@defrectportanchor@i#1{%
   \anchor{N#1}{%
     \commtikz@rectparams
+    \commtikz@checkportindex{N}{#1}%
     \pgfmathsetlength\pgf@x{-\commtikz@phw + (#1 + 1) * (2 * \commtikz@phw) / (\commtikz@numN + 1)}%
     \pgf@y=\commtikz@hh\relax
   }%
   \anchor{S#1}{%
     \commtikz@rectparams
+    \commtikz@checkportindex{S}{#1}%
     \pgfmathsetlength\pgf@x{-\commtikz@phw + (#1 + 1) * (2 * \commtikz@phw) / (\commtikz@numS + 1)}%
     \pgf@y=-\commtikz@hh\relax
   }%
   \anchor{E#1}{%
     \commtikz@rectparams
+    \commtikz@checkportindex{E}{#1}%
     \pgf@x=\commtikz@hw\relax
     \pgfmathsetlength\pgf@y{\commtikz@portorder * (\commtikz@phh - (#1 + 1) * (2 * \commtikz@phh) / (\commtikz@numE + 1))}%
   }%
   \anchor{W#1}{%
     \commtikz@rectparams
+    \commtikz@checkportindex{W}{#1}%
     \pgf@x=-\commtikz@hw\relax
     \pgfmathsetlength\pgf@y{\commtikz@portorder * (\commtikz@phh - (#1 + 1) * (2 * \commtikz@phh) / (\commtikz@numW + 1))}%
   }%
@@ -343,6 +454,7 @@
 % ==============================================================================
 \def\commtikz@rectparams{%
   \commtikz@savedrect
+  \commtikz@arrowunit=\commtikz@saved@arrowunit\relax
   \commtikz@u=\commtikz@saved@u\relax
   \commtikz@hw=\commtikz@saved@hw\relax
   \commtikz@hh=\commtikz@saved@hh\relax
@@ -351,8 +463,9 @@
 }
 
 \pgfdeclareshape{commrect}{
+  \savedmacro\commtikz@savedlabel{\commtikz@savelabeldistance}
   \savedmacro\commtikz@savedrect{%
-    \pgfmathsetlength\commtikz@u{\pgfkeysvalueof{/tikz/commtikz/unit}}%
+    \commtikz@setunit
     \pgfmathparse{\pgfkeysvalueof{/tikz/commtikz/width}}%
     \ifpgfmathunitsdeclared
       \commtikz@hw=0.5\dimexpr\pgfmathresult pt\relax
@@ -388,6 +501,8 @@
       \fi
     \fi
     \edef\commtikz@saved@u{\the\commtikz@u}%
+    \commtikz@validatefixedports
+    \commtikz@savearrowunit
     \edef\commtikz@saved@hw{\the\commtikz@hw}%
     \edef\commtikz@saved@hh{\the\commtikz@hh}%
     \edef\commtikz@saved@phw{\the\commtikz@phw}%
@@ -470,20 +585,25 @@
 % ==============================================================================
 \def\commtikz@circparams{%
   \commtikz@savedcirc
+  \commtikz@arrowunit=\commtikz@saved@arrowunit\relax
   \commtikz@u=\commtikz@saved@u\relax
   \commtikz@r=\commtikz@saved@r\relax
   \commtikz@rk=\commtikz@saved@rk\relax
 }
 
 \pgfdeclareshape{commcircle}{
+  \savedmacro\commtikz@savedlabel{\commtikz@savelabeldistance}
   \savedmacro\commtikz@savedcirc{%
-    \pgfmathsetlength\commtikz@u{\pgfkeysvalueof{/tikz/commtikz/unit}}%
+    \commtikz@setunit
     \pgfmathparse{\pgfkeysvalueof{/tikz/commtikz/radius}}%
     \ifpgfmathunitsdeclared
       \commtikz@r=\pgfmathresult pt\relax
     \else
       \commtikz@r=\pgfmathresult\commtikz@u\relax
     \fi
+    \commtikz@hw=\commtikz@r\relax
+    \commtikz@hh=\commtikz@r\relax
+    \commtikz@savearrowunit
     \commtikz@rk=0.70710678\commtikz@r\relax
     \edef\commtikz@saved@u{\the\commtikz@u}%
     \edef\commtikz@saved@r{\the\commtikz@r}%
@@ -536,7 +656,9 @@
     \pgf@xa=\pgf@x\relax
     \pgf@ya=\pgf@y\relax
     \commtikz@circparams
-    \pgfpointborderellipse{\pgfpoint{\pgf@xa}{\pgf@ya}}{\pgfpoint{\commtikz@r}{\commtikz@r}}%
+    % PGF's ellipse helper reuses xa/ya while reading the radii.
+    \edef\commtikz@borderdirection{\noexpand\pgfpoint{\the\pgf@xa}{\the\pgf@ya}}%
+    \pgfpointborderellipse{\commtikz@borderdirection}{\pgfpoint{\commtikz@r}{\commtikz@r}}%
   }
 
   \backgroundpath{%
@@ -585,10 +707,10 @@
 
 % Generic block styles
 \tikzset{
-  commrect/.style={shape=commrect, commtikz base node, width=1, height=1},
+  commrect/.style={shape=commrect, commtikz square node},
   rectblock/.style={commrect, #1},
   rectblock/.default={},
-  commsquare/.style={shape=commrect, commtikz base node, width=1, height=1},
+  commsquare/.style={shape=commrect, commtikz square node},
   squareblock/.style={commsquare, #1},
   squareblock/.default={},
   commcircle/.style={shape=commcircle, commtikz base node, comp radius=0.5},

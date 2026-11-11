@@ -32,7 +32,11 @@ The \texttt{commtikz} package provides native PGF/TikZ node shapes, configurable
 \end{lstlisting}
 
 \section{Core Electro-Optical \& System Component Grid}
-Below is the catalog of the core optical, instrument, and mixed-signal building blocks:
+Below is the catalog of the core optical, instrument, and mixed-signal building blocks.
+Ordinary boxed blocks share a $1\times1$ footprint, including PM, ringmod,
+phase shifter, FBG, and the amplifier family. Special aspect ratios are preserved.
+Defaults use 85\% block scale and 110\% circuit scale. The oscilloscope
+screen shows an eye diagram; PC uses outlined paddles with distinct axes.
 
 \begin{center}
 \begin{tikzpicture}[commtikz unit=0.82cm]
@@ -40,7 +44,7 @@ Below is the catalog of the core optical, instrument, and mixed-signal building 
   \node[commrect, anchor=west]     at (0, 0)    (c00) {};
   \node[couplercirc, anchor=west]  at (3.2, 0)  (c01) {};
   \node[bs, anchor=west]           at (6.4, 0)  (c02) {};
-  \node[fiberspool, draw=black, anchor=west] at (9.6, 0) (c03) {};
+  \node[fiberspool, anchor=west] at (9.6, 0) (c03) {};
   \node[polctrl, anchor=west]      at (12.8, 0) (c04) {};
   \node[below=2pt of c00, font=\ttfamily\scriptsize] {commrect};
   \node[below=2pt of c01, font=\ttfamily\scriptsize] {couplercirc};
@@ -200,15 +204,15 @@ Below is the catalog of the core optical, instrument, and mixed-signal building 
 \end{center}
 \vspace{-0.3cm}
 \section{Multi-Port Anchor System, Connectors, Scaling \& Line Width Control}
-Every rectangular and trapezoidal component supports \texttt{numN}, \texttt{numS}, \texttt{numE}, \texttt{numW} (or \texttt{ports=\{W=2, E=4, N=2, S=1\}}), automatically generating evenly spaced anchors \texttt{W0..Wn}, \texttt{E0..En}, \texttt{N0..Nn}, and \texttt{S0..Sn} alongside standard TikZ anchors. Signal connectors (\texttt{opt}, \texttt{rf}, \texttt{optrf}, \texttt{dc}, \texttt{ctrl}) are drawn on the \texttt{background} layer behind all component shapes.
+Generic blocks and mux/demux support \texttt{numN}, \texttt{numS}, \texttt{numE}, \texttt{numW} (or \texttt{ports=\{W=2, E=4, N=2, S=1\}}), automatically generating evenly spaced anchors \texttt{W0..Wn}, \texttt{E0..En}, \texttt{N0..Nn}, and \texttt{S0..Sn} alongside standard TikZ anchors. Fixed-topology blocks enforce their documented W/E counts, top-to-bottom order, and full-height W/E span. Signal connectors (\texttt{opt}, \texttt{rf}, \texttt{optrf}, \texttt{dc}, \texttt{ctrl}) are drawn on the \texttt{background} layer behind all component shapes.
 
 \smallskip
-\noindent\textbf{Scaling:} \texttt{commtikz unit=<dim>} (default \texttt{1cm}) or \texttt{commtikz scale=<num>} sets the base unit $u$ multiplying all dimensionless block keys (\texttt{width}, \texttt{height}, \texttt{height1}, \texttt{height2}, \texttt{comp radius}) and internal arrows. Pass \texttt{commtikz scale=0.75} (or \texttt{width=..., height=...}) on a node to scale a single block, or pass \texttt{[commtikz unit=0.8cm, x=0.8cm, y=0.8cm]} on \texttt{\textbackslash begin\{tikzpicture\}} to scale a whole figure while keeping text labels at document font size.
+\noindent\textbf{Scaling:} \texttt{commtikz unit=<dim>} (default \texttt{1cm}) or \texttt{commtikz scale=<num>} sets the base unit $u$. Dimensions also use \texttt{commtikz block scale} (0.85) or \texttt{commtikz circuit scale} (1.10). These factors multiply all dimensionless block keys (\texttt{width}, \texttt{height}, \texttt{height1}, \texttt{height2}, \texttt{comp radius}) and internal arrows. Pass \texttt{commtikz scale=0.75} (or \texttt{width=..., height=...}) on a node to scale a single block, or pass \texttt{[commtikz unit=0.8cm, x=0.8cm, y=0.8cm]} on \texttt{\textbackslash begin\{tikzpicture\}} to scale a whole figure while keeping text labels at document font size.
 
 \begin{center}
 \begin{tikzpicture}[commtikz unit=0.92cm]
   % Multi-port block demonstration
-  \node[commrect, width=2.5, height=1.8, ports={W=3, E=4, N=2, S=2}, comp label={\footnotesize\textbf{DSP / ASIC}}] (asic) at (0,0) {};
+  \node[commrect, width=2.5cm, height=1.8cm, ports={W=3, E=4, N=2, S=2}, comp label={\footnotesize\textbf{DSP / ASIC}}] (asic) at (0,0) {};
   \foreach \i in {0,1,2} {
     \fill[OPTcol] (asic.W\i) circle (1.5pt) node[left=3pt, font=\ttfamily\scriptsize, text=OPTcol] {W\i};
   }
@@ -237,6 +241,8 @@ Every rectangular and trapezoidal component supports \texttt{numN}, \texttt{numS
   \end{scope}
 \end{tikzpicture}
 \end{center}
+
+\noindent\textbf{Labels:} Component labels use a default clearance of \texttt{3pt}. Set \texttt{commtikz label distance=<dim>} on a picture, scope, or component, or use \texttt{label=\{[label distance=<dim>]above:Text\}} for one label.
 
 \noindent\textbf{Visual Line Width Matching:} Use \texttt{commtikz line width=<dimen>} (default \texttt{0.6pt}) or \texttt{commtikz match font} (\texttt{0.055em}) to tune stroke weight relative to the surrounding document font:
 \begin{center}
@@ -280,13 +286,13 @@ Every rectangular and trapezoidal component supports \texttt{numN}, \texttt{numS
   \draw[rf->] (rfamp.out) -- (mzm.N0);
 
   % Fiber transmission span
-  \node[couplercirc, right=0.85cm of mzm] (tap1) {};
+  \node[couplercirc, draw=OPTcol, right=0.85cm of mzm] (tap1) {};
   \node[osa, above=0.80cm of tap1, label=above:{\footnotesize OSA}] (osa) {};
-  \node[fiberspool, right=0.95cm of tap1, label=above:{\footnotesize 50 km SMF}] (smf) {};
+  \node[fiberspool, draw=OPTcol, right=0.95cm of tap1, label=above:{\footnotesize 50 km SMF}] (smf) {};
   \node[edfa, right=0.75cm of smf, label=above:{\footnotesize EDFA}] (edfa) {};
   \node[bpf, right=0.65cm of edfa, label=above:{\footnotesize OBPF}] (obpf) {};
   \node[voa, right=0.65cm of obpf, label=above:{\footnotesize VOA}] (voa) {};
-  \node[couplercirc, right=0.65cm of voa] (tap2) {};
+  \node[couplercirc, draw=OPTcol, right=0.65cm of voa] (tap2) {};
   \node[pd, below=0.80cm of tap2, label=below:{\footnotesize Monitor PD}] (mpd) {};
 
   % Receiver chain
@@ -327,7 +333,7 @@ Every rectangular and trapezoidal component supports \texttt{numN}, \texttt{numS
   \draw[rf->] (txawg.S1) -- node[right, font=\scriptsize, text=RFcol] {Q} (iqm.N1);
 
   % Channel
-  \node[fiberspool, right=0.85cm of iqm, label=above:{\footnotesize SSMF}] (chfiber) {};
+  \node[fiberspool, draw=OPTcol, right=0.85cm of iqm, label=above:{\footnotesize SSMF}] (chfiber) {};
   \node[edfa, right=0.75cm of chfiber, label=above:{\footnotesize EDFA}] (chedfa) {};
   \node[bpf, right=0.75cm of chedfa, label=above:{\footnotesize OBPF}] (chbpf) {};
 
@@ -377,8 +383,7 @@ Every rectangular and trapezoidal component supports \texttt{numN}, \texttt{numS
 
   % Reverse-biased circuit photodiode connected to inverting input
   \draw[commtikz line] (nin) -- (tia.in-);
-  \node[elpd, rotate=90, transform shape] (cpd) at ([yshift=-0.65cm]nin) {};
-  \node[left=4pt of cpd.center, font=\scriptsize] {PD};
+  \node[elpd, rotate=90, transform shape, label=above:{\scriptsize PD}] (cpd) at ([yshift=-0.65cm]nin) {};
   \draw[commtikz line] (nin) -- (cpd.east);
   \node[ground] at ([yshift=-0.35cm]cpd.west) (g1) {};
   \draw[commtikz line] (cpd.west) -- (g1.north);
@@ -416,5 +421,10 @@ Every rectangular and trapezoidal component supports \texttt{numN}, \texttt{numS
   \end{scope}
 \end{tikzpicture}
 \end{center}
+
+\noindent\textbf{Coupler colors:} Standalone \texttt{coupler}/\texttt{couplercirc}
+and \texttt{fiberspool} nodes use the current drawing color (normally black).
+Inline \texttt{to[to coupler]} and \texttt{to[to couplercirc]} inherit the
+connector color; \texttt{to[to coupler=\{draw=black\}]} overrides it.
 
 \end{document}

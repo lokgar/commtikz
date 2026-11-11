@@ -11,7 +11,8 @@
     \pgf@xa=\pgf@x\relax
     \pgf@ya=\pgf@y\relax
     \commtikz@rectparams
-    \pgfpointborderellipse{\pgfpoint{\pgf@xa}{\pgf@ya}}{\pgfpoint{\commtikz@hw}{\commtikz@hh}}%
+    \edef\commtikz@borderdirection{\noexpand\pgfpoint{\the\pgf@xa}{\the\pgf@ya}}%
+    \pgfpointborderellipse{\commtikz@borderdirection}{\pgfpoint{\commtikz@hw}{\commtikz@hh}}%
   }
 
   \backgroundpath{%
@@ -122,7 +123,7 @@
 }
 
 % ==============================================================================
-% 5. PolCtrl (Polarization Controller: 3 filled black circles centered vertically)
+% 5. PolCtrl (Polarization Controller: three outlined paddles with axes)
 % ==============================================================================
 \pgfdeclareshape{commtikz_polctrl}{
   \commtikz@inheritrectanchors{commrect}
@@ -130,15 +131,25 @@
 
   \beforebackgroundpath{%
     \commtikz@rectparams
-    \pgfmathsetlength\commtikz@pcr{0.20 * \commtikz@hh}%
-    \pgfmathsetlength\commtikz@pcdx{0.50 * \commtikz@hw}%
-    \pgfscope
-      \commtikz@use@strokecolor@as@fill
-      \pgfpathcircle{\pgfpoint{-\commtikz@pcdx}{0pt}}{\commtikz@pcr}%
-      \pgfpathcircle{\pgfpoint{0pt}{0pt}}{\commtikz@pcr}%
-      \pgfpathcircle{\pgfpoint{\commtikz@pcdx}{0pt}}{\commtikz@pcr}%
-      \pgfusepath{fill,stroke}%
-    \endpgfscope
+    \pgfmathsetlength\commtikz@pcr{0.22 * min(\commtikz@hw,\commtikz@hh)}%
+    \pgfmathsetlength\commtikz@pcdx{0.54 * \commtikz@hw}%
+    \pgfpathmoveto{\pgfpoint{-\commtikz@hw}{0pt}}%
+    \pgfpathlineto{\pgfpoint{\commtikz@hw}{0pt}}%
+    \pgfusepath{stroke}%
+    % Mask the fiber inside each outlined paddle, then show its orientation.
+    \pgfutil@for\commtikz@paddle:=-1,0,1\do{%
+      \pgfscope
+        \pgftransformshift{\pgfpoint{\commtikz@paddle\commtikz@pcdx}{0pt}}%
+        \pgfsetfillcolor{\pgfkeysvalueof{/tikz/commtikz/fill}}%
+        \pgfpathcircle{\pgfpointorigin}{\commtikz@pcr}%
+        \pgfusepath{fill,stroke}%
+        \pgfmathparse{90+45*\commtikz@paddle}%
+        \pgftransformrotate{\pgfmathresult}%
+        \pgfpathmoveto{\pgfpoint{-0.70\commtikz@pcr}{0pt}}%
+        \pgfpathlineto{\pgfpoint{0.70\commtikz@pcr}{0pt}}%
+        \pgfusepath{stroke}%
+      \endpgfscope
+    }%
     \commtikz@drawcomplabel{0pt}{0pt}%
   }
 }
@@ -155,7 +166,7 @@
     \pgfmathsetlength\commtikz@voar{0.6667 * \commtikz@hw}%
     \pgfpathcircle{\pgfpointorigin}{\commtikz@voar}%
     \pgfusepath{stroke}%
-    \commtikz@drawarrow{-0.82\commtikz@hw}{-0.82\commtikz@hh}{0.90\commtikz@hw}{0.90\commtikz@hh}{0.14\commtikz@u}{0.10\commtikz@u}%
+    \commtikz@drawopenarrow{-0.78\commtikz@hw}{-0.78\commtikz@hh}{0.78\commtikz@hw}{0.78\commtikz@hh}%
     \commtikz@drawcomplabel{0pt}{0pt}%
   }
 }
@@ -335,7 +346,7 @@
     % Two series photodiodes inside a balanced receiver block
     % Lower diode: anode at -0.64*hh, cathode at -0.20*hh
     % Upper diode: anode at +0.20*hh, cathode at +0.64*hh
-    % Midpoint tap at y=0 to East port (+0.82*hw, 0)
+    % Midpoint tap at y=0 reaches East port (+hw, 0)
     \pgfpathmoveto{\pgfpoint{0pt}{-0.84\commtikz@hh}}%
     \pgfpathlineto{\pgfpoint{0pt}{0.84\commtikz@hh}}%
     % Cathode bars
@@ -345,8 +356,9 @@
     \pgfpathlineto{\pgfpoint{0.38\commtikz@hw}{0.64\commtikz@hh}}%
     % Center tap to RF output
     \pgfpathmoveto{\pgfpoint{0pt}{0pt}}%
-    \pgfpathlineto{\pgfpoint{0.82\commtikz@hw}{0pt}}%
+    \pgfpathlineto{\pgfpoint{\commtikz@hw}{0pt}}%
     \pgfusepath{stroke}%
+    \commtikz@drawopenhead{0pt}{0pt}{0.80\commtikz@hw}{0pt}%
     % Filled diode triangles
     \pgfscope
       \commtikz@use@strokecolor@as@fill
@@ -396,9 +408,11 @@
       \pgfpathclose
       \pgfusepath{fill,stroke}%
     \endpgfscope
-    % Two optical emission arrows
-    \commtikz@drawarrow{-0.14\commtikz@hw}{0.48\commtikz@hh}{0.193\commtikz@hw}{0.88\commtikz@hh}{0.14\commtikz@u}{0.085\commtikz@u}%
-    \commtikz@drawarrow{0pt}{0.34\commtikz@hh}{0.333\commtikz@hw}{0.74\commtikz@hh}{0.14\commtikz@u}{0.085\commtikz@u}%
+    % Compact emission pair, raised above the diode like the circuit LED.
+    % Match elld's physical slope, accounting for its 0.65 x 0.38 aspect ratio:
+    % dx = 0.30 * (0.33 * 0.65) / (0.63 * 0.38) = 0.2688.
+    \commtikz@drawopenarrow{-0.1888\commtikz@hw}{0.58\commtikz@hh}{0.08\commtikz@hw}{0.88\commtikz@hh}%
+    \commtikz@drawopenarrow{0.1412\commtikz@hw}{0.58\commtikz@hh}{0.41\commtikz@hw}{0.88\commtikz@hh}%
   }
 }
 
@@ -446,8 +460,9 @@
 }
 
 \pgfdeclareshape{commtikz_mux}{
+  \savedmacro\commtikz@savedlabel{\commtikz@savelabeldistance}
   \savedmacro\commtikz@savedmux{%
-    \pgfmathsetlength\commtikz@u{\pgfkeysvalueof{/tikz/commtikz/unit}}%
+    \commtikz@setunit
     \pgfmathparse{\pgfkeysvalueof{/tikz/commtikz/width}}%
     \ifpgfmathunitsdeclared
       \commtikz@hw=0.5\dimexpr\pgfmathresult pt\relax
@@ -591,19 +606,26 @@
 
   \beforebackgroundpath{%
     \commtikz@rectparams
-    % Mask any background connector behind the grating
-    \pgfscope
-      \pgfsetfillcolor{\pgfkeysvalueof{/tikz/commtikz/fill}}%
-      \pgfpathrectanglecorners{\pgfpoint{-\commtikz@hw}{-\commtikz@hh}}{\pgfpoint{\commtikz@hw}{\commtikz@hh}}%
-      \pgfusepath{fill}%
-    \endpgfscope
+    % The boxed block is already filled. Only the bare variant needs a mask;
+    % repainting it here would cover the inside half of the box outline.
+    \ifnum\pgfkeysvalueof{/tikz/commtikz/boxed}=0\relax
+      \pgfscope
+        \pgfsetfillcolor{\pgfkeysvalueof{/tikz/commtikz/fill}}%
+        \pgfpathrectanglecorners{\pgfpoint{-\commtikz@hw}{-\commtikz@hh}}{\pgfpoint{\commtikz@hw}{\commtikz@hh}}%
+        \pgfusepath{fill}%
+      \endpgfscope
+    \fi
     % Horizontal fiber line from -hw to +hw
     \pgfpathmoveto{\pgfpoint{-\commtikz@hw}{0pt}}%
     \pgfpathlineto{\pgfpoint{\commtikz@hw}{0pt}}%
     % 6 vertical grating bars
-    \pgfmathsetlength\commtikz@fbggh{0.95 * \commtikz@hh}%
+    \ifnum\pgfkeysvalueof{/tikz/commtikz/boxed}=1\relax
+      \pgfmathsetlength\commtikz@fbggh{0.45 * \commtikz@hh}%
+    \else
+      \pgfmathsetlength\commtikz@fbggh{0.95 * \commtikz@hh}%
+    \fi
     \pgfutil@for\commtikz@gi:=0,1,2,3,4,5\do{%
-      \pgfmathsetlength\commtikz@gx{(-0.78947 + \commtikz@gi * 0.31579) * \commtikz@hw}%
+      \pgfmathsetlength\commtikz@gx{(-0.60 + \commtikz@gi * 0.24) * \commtikz@hw}%
       \pgfpathmoveto{\pgfpoint{\commtikz@gx}{-\commtikz@fbggh}}%
       \pgfpathlineto{\pgfpoint{\commtikz@gx}{\commtikz@fbggh}}%
     }%
@@ -632,32 +654,20 @@
       \pgfpathmoveto{\pgfpointpolar{-200}{\commtikz@ar}}%
       \pgfpatharc{-200}{70}{\commtikz@ar}%
       \pgfusepath{stroke}%
-      % Arrowhead at 70 deg pointing CCW (tangent angle 160 deg)
       \pgfscope
-        \commtikz@use@strokecolor@as@fill
         \pgftransformshift{\pgfpointpolar{70}{\commtikz@ar}}%
-        \pgftransformrotate{-30}%
-        \pgfpathmoveto{\pgfpoint{-0.16\commtikz@r}{0pt}}%
-        \pgfpathlineto{\pgfpoint{0.16\commtikz@r}{0.12\commtikz@r}}%
-        \pgfpathlineto{\pgfpoint{0.16\commtikz@r}{-0.12\commtikz@r}}%
-        \pgfpathclose
-        \pgfusepath{fill}%
+        \pgftransformrotate{148}%
+        \commtikz@drawopenhead{-\commtikz@arrowunit}{0pt}{0pt}{0pt}%
       \endpgfscope
     \else
       % Clockwise arc from 200 deg down to -70 deg
       \pgfpathmoveto{\pgfpointpolar{200}{\commtikz@ar}}%
       \pgfpatharc{200}{-70}{\commtikz@ar}%
       \pgfusepath{stroke}%
-      % Arrowhead at -70 deg rotated by 30 deg
       \pgfscope
-        \commtikz@use@strokecolor@as@fill
         \pgftransformshift{\pgfpointpolar{-70}{\commtikz@ar}}%
-        \pgftransformrotate{30}%
-        \pgfpathmoveto{\pgfpoint{-0.16\commtikz@r}{0pt}}%
-        \pgfpathlineto{\pgfpoint{0.16\commtikz@r}{0.12\commtikz@r}}%
-        \pgfpathlineto{\pgfpoint{0.16\commtikz@r}{-0.12\commtikz@r}}%
-        \pgfpathclose
-        \pgfusepath{fill}%
+        \pgftransformrotate{-148}%
+        \commtikz@drawopenhead{-\commtikz@arrowunit}{0pt}{0pt}{0pt}%
       \endpgfscope
     \fi
   }
@@ -673,9 +683,9 @@
   \beforebackgroundpath{%
     \commtikz@rectparams
     \ifnum\pgfkeysvalueof{/tikz/commtikz/flip}=1\relax
-      \commtikz@drawarrow{0.50\commtikz@hw}{0pt}{-0.50\commtikz@hw}{0pt}{0.20\commtikz@u}{0.14\commtikz@u}%
+      \commtikz@drawopenarrow{0.50\commtikz@hw}{0pt}{-0.50\commtikz@hw}{0pt}%
     \else
-      \commtikz@drawarrow{-0.50\commtikz@hw}{0pt}{0.50\commtikz@hw}{0pt}{0.20\commtikz@u}{0.14\commtikz@u}%
+      \commtikz@drawopenarrow{-0.50\commtikz@hw}{0pt}{0.50\commtikz@hw}{0pt}%
     \fi
   }
 }
@@ -739,21 +749,41 @@
   }
 }
 
+\def\commtikz@ringdropanchor#1{%
+  \commtikz@rectparams
+  \commtikz@savedring
+  \ifnum\commtikz@saved@adddrop=1\relax\else
+    \PackageError{commtikz}{Drop ports require add drop=true}{Enable add drop on this ringmod node.}%
+  \fi
+  \pgfpoint{#1\commtikz@hw}{0.56\commtikz@hh}%
+}
+
 \pgfdeclareshape{commtikz_ringmod}{
   \commtikz@inheritrectanchors{commrect}
   \inheritbackgroundpath[from=commrect]
 
+  \savedmacro\commtikz@savedring{%
+    \edef\commtikz@saved@adddrop{\pgfkeysvalueof{/tikz/commtikz/add drop}}%
+    \addtosavedmacro\commtikz@saved@adddrop
+  }
+  \anchor{bus in}{\commtikz@rectparams\pgfpoint{-\commtikz@hw}{0pt}}
+  \anchor{bus out}{\commtikz@rectparams\pgfpoint{\commtikz@hw}{0pt}}
+  \anchor{drop in}{\commtikz@ringdropanchor{-1}}
+  \anchor{drop out}{\commtikz@ringdropanchor{1}}
+
   \beforebackgroundpath{%
     \commtikz@rectparams
-    % Bus waveguide near bottom
-    \pgfpathmoveto{\pgfpoint{-0.85\commtikz@hw}{-0.52\commtikz@hh}}%
-    \pgfpathlineto{\pgfpoint{0.85\commtikz@hw}{-0.52\commtikz@hh}}%
+    % Centered W0/E0 connect smoothly to the lower bus waveguide.
+    \pgfpathmoveto{\pgfpoint{-\commtikz@hw}{0pt}}%
+    \pgfpathcurveto{\pgfpoint{-0.75\commtikz@hw}{0pt}}{\pgfpoint{-0.80\commtikz@hw}{-0.52\commtikz@hh}}{\pgfpoint{-0.55\commtikz@hw}{-0.52\commtikz@hh}}%
+    \pgfpathlineto{\pgfpoint{0.55\commtikz@hw}{-0.52\commtikz@hh}}%
+    \pgfpathcurveto{\pgfpoint{0.80\commtikz@hw}{-0.52\commtikz@hh}}{\pgfpoint{0.75\commtikz@hw}{0pt}}{\pgfpoint{\commtikz@hw}{0pt}}%
     % Coupled microring resonator
     \pgfmathsetlength\commtikz@rr{0.44 * \commtikz@hh}%
     \pgfpathcircle{\pgfpoint{0pt}{0.02\commtikz@hh}}{\commtikz@rr}%
     \ifnum\pgfkeysvalueof{/tikz/commtikz/add drop}=1\relax
-      \pgfpathmoveto{\pgfpoint{-0.85\commtikz@hw}{0.56\commtikz@hh}}%
-      \pgfpathlineto{\pgfpoint{0.85\commtikz@hw}{0.56\commtikz@hh}}%
+      \pgfpathmoveto{\pgfpoint{-\commtikz@hw}{0.56\commtikz@hh}}%
+      \pgfpathlineto{\pgfpoint{\commtikz@hw}{0.56\commtikz@hh}}%
     \fi
     \pgfusepath{stroke}%
     \commtikz@drawcomplabel{0pt}{0.02\commtikz@hh}%
@@ -767,7 +797,7 @@
   \beforebackgroundpath{%
     \commtikz@rectparams
     \ifnum\pgfkeysvalueof{/tikz/commtikz/tunable}=1\relax
-      \commtikz@drawarrow{-0.82\commtikz@hw}{-0.82\commtikz@hh}{0.90\commtikz@hw}{0.90\commtikz@hh}{0.14\commtikz@u}{0.10\commtikz@u}%
+      \commtikz@drawopenarrow{-0.78\commtikz@hw}{-0.78\commtikz@hh}{0.78\commtikz@hw}{0.78\commtikz@hh}%
       \pgfscope
         \pgfsetfillcolor{\pgfkeysvalueof{/tikz/commtikz/fill}}%
         \pgfpathellipse{\pgfpointorigin}{\pgfpoint{0.40\commtikz@hw}{0pt}}{\pgfpoint{0pt}{0.35\commtikz@hh}}%
@@ -788,25 +818,8 @@
 
   \beforebackgroundpath{%
     \commtikz@rectparams
-    % Single vertical shaft between the two arrowhead bases (no overlap with arrow tips)
-    \pgfpathmoveto{\pgfpoint{0pt}{-0.48\commtikz@hh}}%
-    \pgfpathlineto{\pgfpoint{0pt}{0.48\commtikz@hh}}%
-    \pgfusepath{stroke}%
-    % Top and bottom filled triangle arrowheads
-    \pgfscope
-      \commtikz@use@strokecolor@as@fill
-      % Top arrowhead pointing up to +0.78*hh
-      \pgfpathmoveto{\pgfpoint{0pt}{0.78\commtikz@hh}}%
-      \pgfpathlineto{\pgfpoint{-0.46\commtikz@hw}{0.46\commtikz@hh}}%
-      \pgfpathlineto{\pgfpoint{0.46\commtikz@hw}{0.46\commtikz@hh}}%
-      \pgfpathclose
-      % Bottom arrowhead pointing down to -0.78*hh
-      \pgfpathmoveto{\pgfpoint{0pt}{-0.78\commtikz@hh}}%
-      \pgfpathlineto{\pgfpoint{-0.46\commtikz@hw}{-0.46\commtikz@hh}}%
-      \pgfpathlineto{\pgfpoint{0.46\commtikz@hw}{-0.46\commtikz@hh}}%
-      \pgfpathclose
-      \pgfusepath{fill}%
-    \endpgfscope
+    \commtikz@drawopenarrow{0pt}{0pt}{0pt}{0.76\commtikz@hh}%
+    \commtikz@drawopenarrow{0pt}{0pt}{0pt}{-0.76\commtikz@hh}%
   }
 }
 
@@ -817,7 +830,7 @@
   \beforebackgroundpath{%
     \commtikz@rectparams
     \pgfscope
-      \pgfsetdash{{2pt}{1.5pt}}{0pt}%
+      \pgfsetdash{{0.07\commtikz@arrowunit}{0.05\commtikz@arrowunit}}{0pt}%
       \pgfpathmoveto{\pgfpoint{-0.65\commtikz@hw}{-0.75\commtikz@hh}}%
       \pgfpathlineto{\pgfpoint{0.65\commtikz@hw}{0.75\commtikz@hh}}%
       \pgfusepath{stroke}%
@@ -886,55 +899,55 @@
   couplercirc/.style={shape=commtikz_couplercirc, commtikz base node, width=0.3, height=0.15},
   coupler/.style={couplercirc, #1},
   coupler/.default={},
-  splitter/.style={shape=commtikz_splitter, commtikz base node, width=1.0, height=1.0, numW=1, numE=2, /tikz/commtikz/flip=0},
-  combiner/.style={shape=commtikz_splitter, commtikz base node, width=1.0, height=1.0, numW=2, numE=1, /tikz/commtikz/flip=1},
-  dcoupler/.style={shape=commtikz_dcoupler, commtikz base node, width=1.2, height=1.0, numW=2, numE=2},
+  splitter/.style={shape=commtikz_splitter, commtikz square node, numW=1, numE=2, /tikz/commtikz/flip=0, commtikz fixed ports=1/2},
+  combiner/.style={shape=commtikz_splitter, commtikz square node, numW=2, numE=1, /tikz/commtikz/flip=1, commtikz fixed ports=2/1},
+  dcoupler/.style={shape=commtikz_dcoupler, commtikz square node, numW=2, numE=2, commtikz fixed ports=2/2},
   % Free-space & Passive Optics
-  bs/.style={shape=commtikz_bs, commtikz base node, width=1.0, height=1.0},
+  bs/.style={shape=commtikz_bs, commtikz square node},
   beamsplitter/.style={bs, #1},
   beamsplitter/.default={},
-  pbs/.style={shape=commtikz_pbs, commtikz base node, width=1.0, height=1.0},
+  pbs/.style={shape=commtikz_pbs, commtikz square node},
   mirror/.style={shape=commtikz_mirror, commtikz base node, width=0.3, height=1.0},
-  polarizer/.style={shape=commtikz_polarizer, commtikz base node, width=0.45, height=1.0},
-  waveplate/.style={shape=commtikz_waveplate, commtikz base node, width=0.45, height=1.0},
+  polarizer/.style={shape=commtikz_polarizer, commtikz base node, width=0.45, height=1.0, commtikz arrow reference=0.45/1},
+  waveplate/.style={shape=commtikz_waveplate, commtikz base node, width=0.45, height=1.0, commtikz arrow reference=0.45/1},
   hwp/.style={waveplate, label=above:{\footnotesize$\lambda/2$}},
   qwp/.style={waveplate, label=above:{\footnotesize$\lambda/4$}},
   % Fiber & Waveguide Elements
-  fiberspool/.style={shape=commtikz_fiberspool, commtikz bare node, draw=OPTcol, width=1.0, height=1.0},
+  fiberspool/.style={shape=commtikz_fiberspool, commtikz bare node, width=1.3, height=1.4},
   fiber/.style={fiberspool, #1},
   fiber/.default={},
   smf/.style={fiberspool, #1},
   smf/.default={},
-  polctrl/.style={shape=commtikz_polctrl, commtikz base node, width=1.0, height=1.0},
+  polctrl/.style={shape=commtikz_polctrl, commtikz square node},
   pc/.style={polctrl, #1},
   pc/.default={},
-  voa/.style={shape=commtikz_voa, commtikz base node, width=1.0, height=1.0},
-  fbg/.style={shape=commtikz_fbg, commtikz bare node, width=0.95, height=0.4},
+  voa/.style={shape=commtikz_voa, commtikz square node},
+  fbg/.style={shape=commtikz_fbg, commtikz square node, boxed=true},
   circulator/.style={shape=commtikz_circulator, commtikz base node, comp radius=0.5},
-  isolator/.style={shape=commtikz_isolator, commtikz base node, width=1.0, height=1.0},
+  isolator/.style={shape=commtikz_isolator, commtikz square node},
   iso/.style={isolator, #1},
   iso/.default={},
   mux/.style={shape=commtikz_mux, commtikz base node, width=1.1, height1=2.2, height2=1.0, /tikz/commtikz/flip=0},
   demux/.style={shape=commtikz_mux, commtikz base node, width=1.1, height1=2.2, height2=1.0, /tikz/commtikz/flip=1},
   % Electro-Optical Modulators & Active Devices
-  pm/.style={shape=commtikz_pm, commtikz base node, width=1.15, height=0.90},
+  pm/.style={shape=commtikz_pm, commtikz square node, numW=1, numE=1, commtikz fixed ports=1/1},
   phasemod/.style={pm, #1},
   phasemod/.default={},
-  mzm/.style={shape=commtikz_mzm, commtikz base node, width=1.40, height=0.90},
-  iqm/.style={shape=commtikz_iqm, commtikz base node, width=2.05, height=1.10, port span x=1.55},
+  mzm/.style={shape=commtikz_mzm, commtikz base node, width=1.40, height=0.90, numW=1, numE=1, commtikz fixed ports=1/1},
+  iqm/.style={shape=commtikz_iqm, commtikz base node, width=2.05, height=1.10, port span x=1.55, numW=1, numE=1, commtikz fixed ports=1/1},
   dpmzm/.style={iqm, #1},
   dpmzm/.default={},
-  ringmod/.style={shape=commtikz_ringmod, commtikz base node, width=1.2, height=1.0},
+  ringmod/.style={shape=commtikz_ringmod, commtikz square node, numW=1, numE=1, commtikz fixed ports=1/1},
   mrr/.style={ringmod, #1},
   mrr/.default={},
-  phaseshifter/.style={shape=commtikz_phaseshifter, commtikz base node, width=0.85, height=0.85, tunable=true},
-  hybrid90/.style={shape=commtikz_hybrid90, commtikz base node, width=1.45, height=1.45, numW=2, numE=4},
+  phaseshifter/.style={shape=commtikz_phaseshifter, commtikz square node, tunable=true},
+  hybrid90/.style={shape=commtikz_hybrid90, commtikz base node, width=1.45, height=1.45, numW=2, numE=4, commtikz fixed ports=2/4},
   % Sources & Detectors
-  ld/.style={shape=commtikz_ld, commtikz base node, width=1.0, height=1.0},
+  ld/.style={shape=commtikz_ld, commtikz square node},
   laser/.style={ld, #1},
   laser/.default={},
-  pd/.style={shape=commtikz_pd, commtikz base node, width=1.0, height=1.0},
+  pd/.style={shape=commtikz_pd, commtikz square node},
   photodiode/.style={pd, #1},
   photodiode/.default={},
-  bpd/.style={shape=commtikz_bpd, commtikz base node, width=1.1, height=1.4, numW=2, numE=1},
+  bpd/.style={shape=commtikz_bpd, commtikz base node, width=1.1, height=1.4, commtikz arrow reference=1.1/1.4, numW=2, numE=1, commtikz fixed ports=2/1},
 }

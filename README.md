@@ -1,237 +1,254 @@
-# `commtikz`: A TikZ Library for Electro-Optical, Photonics, RF & Communications Schematics
+# commtikz
 
-`commtikz` is a modular LaTeX/TikZ library for drawing publication-quality block diagrams and experimental setup schematics for electro-optical, photonics, fiber-optic, RF, and digital signal processing (DSP) systems.
-
----
-
-## Features
-
-- **Native PGF/TikZ Node Shapes**: Every component is a native PGF shape with crisp mitered geometry that works directly with `\node[...]`, `positioning` (`right=of ...`), `chains`, `fit`, and coordinate calculations (`calc`).
-- **Font-Matched Stroke Weight**: Default line width (`0.6pt`) is calibrated to match the visual stroke weight of standard 10pt-11pt LaTeX fonts, with one-key global or scoped customization (`commtikz line width=<dimen>` or `commtikz match font`).
-- **Background-Layer Signal Connectors**: Signal paths (`opt`, `rf`, `optrf`, `dc`, `ctrl`) are automatically rendered on the `background` layer behind component shapes so connector wires never overlap across component interiors.
-- **Dual Port & Compass Anchor System**:
-  - **0-based multi-port anchors**: `W0..Wn`, `E0..En`, `N0..Nn`, `S0..Sn` (configurable per side via `numW`, `numE`, `numN`, `numS` or `ports={W=2, E=4, N=1, S=1}`), plus `in`, `out`, `1..4` (on `circulator`), and semantic ports (`sig`, `lo`, `I+`, `I-`, `Q+`, `Q-` on `hybrid90`; `rf`, `dc`, `rfdc` on `biastee`).
-  - **Standard TikZ compass anchors**: `west` (`W`), `east` (`E`), `north` (`N`), `south` (`S`), `north east` (`NE`), `north west` (`NW`), `south east` (`SE`), `south west` (`SW`), `center`.
-- **Signal-Domain Path Styles, Waveguide Bends & Inline Placement**:
-  - Predefined signal domains: `opt` (`OPTcol`, `#1F77B4` blue), `rf` (`RFcol`, `#D62728` red), `optrf` (`OPTRFcol`, `#9467BD` purple), `dc` (`DCcol`), and `ctrl` (`CTRLcol`, dashed).
-  - Mid-path and end-path arrows: `->-`, `-<-`, `->>-`, `-<<-`, `opt->`, `rf->`, `optrf->`.
-  - Smooth Bezier connectors (`to[arcz]`, `to[arcn]`, `to[arc2]`, `to[arc3]`, `to[arcloop]`) and native rounded orthogonal turns (`waveguide bend`, `opt bend`).
-  - Inline 2-port component placement along paths: `to[inline=...]`, `to[to fiber]`, `to[to voa]`, `to[to polctrl]`, `to[to fbg]`, `to[to isolator]`, `to[to pm]`, `to[to mzm]`, `to[to filter]`, `to[to amp]`.
-
----
+A LaTeX/TikZ library for photonics, optical communications, RF, DSP, and
+electronic circuit diagrams. Components are native PGF shapes with named
+ports, configurable dimensions, and standard TikZ positioning support.
 
 ## Installation
 
-### Option 1: Local Project Directory
-Copy all `.sty` and `.code.tex` files into your LaTeX project directory alongside your main `.tex` file.
-
-### Option 2: User `TEXMFHOME` Tree (System-wide for your user)
-Clone this repository into your local `texmf` directory so `commtikz` is available in any document:
+Copy `commtikz.sty` and all `tikzlibrarycommtikz*.code.tex` files into your
+LaTeX project, or install them in your user TeX tree:
 
 ```bash
 mkdir -p "$(kpsewhich -var-value=TEXMFHOME)/tex/latex/commtikz"
-cp commtikz.sty tikzlibrarycommtikz*.code.tex "$(kpsewhich -var-value=TEXMFHOME)/tex/latex/commtikz/"
+cp commtikz.sty tikzlibrarycommtikz*.code.tex \
+  "$(kpsewhich -var-value=TEXMFHOME)/tex/latex/commtikz/"
 ```
 
-Then load the library in your LaTeX preamble:
+Load either the package or the TikZ library:
 
 ```latex
 \usepackage{commtikz}
-% or:
-\usepackage{tikz}
-\usetikzlibrary{commtikz}
+% Alternatively: \usepackage{tikz} \usetikzlibrary{commtikz}
 ```
 
----
-
-## Quick Start
+## Quick start
 
 ```latex
 \documentclass{article}
 \usepackage{commtikz}
 
 \begin{document}
-\begin{tikzpicture}[commtikz unit=0.85cm]
-  \node[ld, label=above:{\footnotesize CW Laser}] (ld) at (0,0) {};
-  \node[polctrl, right=0.8cm of ld, label=above:{\footnotesize PC}] (pc) {};
-  \node[mzm, right=0.9cm of pc, numN=1] (mzm) {};
-  \node[awg, above=1.2cm of mzm] (awg) {};
-  \node[fiber, right=0.9cm of mzm, label=above:{\footnotesize SMF}] (smf) {};
-  \node[pd, right=0.9cm of smf, label=above:{\footnotesize PD}] (pd) {};
-  \node[esa, right=0.9cm of pd] (esa) {};
+\begin{tikzpicture}
+  \node[ld, label=above:Laser] (laser) {};
+  \node[mzm, right=8mm of laser] (mod) {};
+  \node[awg, above=1cm of mod] (drive) {};
+  \node[pd, right=3cm of mod, label=above:PD] (detector) {};
+  \node[osc, right=8mm of detector] (scope) {};
 
-  \draw[opt, ->-] (ld.E0) -- (pc.W0);
-  \draw[opt, ->-] (pc.E0) -- (mzm.W0);
-  \draw[rf->]     (awg.S0) -- (mzm.N0);
-  \draw[opt, ->-] (mzm.E0) -- (smf.W0);
-  \draw[opt, ->-] (smf.E0) -- (pd.W0);
-  \draw[rf, ->-]  (pd.E0) -- (esa.W0);
+  \draw[opt->] (laser.E0) -- (mod.W0);
+  \draw[rf->] (drive.S0) -- (mod.N0);
+  \draw[opt] (mod.E0) to[to fiberspool] (detector.W0);
+  \draw[rf->] (detector.E0) -- (scope.W0);
 \end{tikzpicture}
 \end{document}
 ```
 
----
+The [visual catalog](commtikz-doc.pdf) includes component drawings and complete
+optical, coherent-receiver, and circuit examples.
 
-## Usage Guide
+## Components
 
-### 1. What `commtikz unit` Controls & How to Scale Building Blocks or Whole Figures
+| Category | Styles |
+| --- | --- |
+| Generic blocks | `commrect`, `commsquare`, `commcircle` |
+| Fiber and passive optics | `coupler`, `fiberspool`, `polctrl`, `voa`, `fbg`, `circulator`, `isolator`, `mux`, `demux`, `splitter`, `combiner`, `dcoupler` |
+| Free-space optics | `bs`, `pbs`, `mirror`, `polarizer`, `waveplate`, `hwp`, `qwp` |
+| Modulators | `pm`, `mzm`, `iqm`, `ringmod`, `phaseshifter` |
+| Optical sources and detectors | `ld`, `pd`, `bpd`, `hybrid90`, `edfa`, `soa` |
+| Instruments | `osa`, `esa`, `awg`, `osc` |
+| RF and signal processing | `filter`, `lpf`, `bpf`, `hpf`, `notchfilter`, `amp`, `vga`, `biastee`, `rfatt`, `adc`, `dac`, `mixer`, `sum`, `sumsigma`, `oscillator`, `oscillatorbox`, `demod`, `termination` |
+| Circuit passives and diodes | `resistor`, `capacitor`, `inductor`, `diode`, `zener`, `elpd`, `elld` |
+| Circuit sources and active devices | `vsource`, `isource`, `acsource`, `ground`, `vcc`, `edot`, `opamp`, `nmos`, `npn` |
 
-#### What `commtikz unit` controls
-`commtikz unit=<dimension>` (default `1cm`, with shorthand `commtikz scale=<factor>`) defines the base length unit $u$ used to compute the physical dimensions of all `commtikz` building blocks:
-- Every component's dimensionless size keys—`width`, `height`, `height1`, `height2` (for `mux`/`demux`), and `comp radius` (for circular blocks)—as well as internal arrowheads (`voa`, `ld`, `isolator`, `phaseshifter`) are multiplied by `commtikz unit`.
-- For example, at the default `commtikz unit=1cm`:
-  - A $1\times1$ square block (`width=1, height=1`) measures $1.0\,\text{cm} \times 1.0\,\text{cm}$.
-  - A circular block (`comp radius=0.5`) has radius $0.5\,\text{cm}$ (diameter $1.0\,\text{cm}$).
-  - An MZM (`width=1.40, height=0.90`) measures $1.40\,\text{cm} \times 0.90\,\text{cm}$, and an IQ modulator (`width=2.05, height=1.10`) measures $2.05\,\text{cm} \times 1.10\,\text{cm}$.
+Common aliases include `fiber`/`smf` for `fiberspool`, `pc` for `polctrl`,
+`laser` for `ld`, `photodiode` for `pd`, `scope`/`dso` for `osc`, `dpmzm` for
+`iqm`, `mrr` for `ringmod`, `R`/`C`/`L` for circuit passives, `led` for `elld`,
+and `tia` for `opamp`.
 
-#### Scaling a single building block
-- **Uniform scaling (preserving aspect ratio)**: Pass `commtikz unit=<dimen>` or `commtikz scale=<factor>` on the node:
-  ```latex
-  \node[iqm, commtikz scale=0.75] (iqm) {};
-  \node[hybrid90, commtikz unit=1.2cm] (hyb) {};
-  ```
-- **Independent width / height / radius**: Override `width`, `height` (`block width`, `block height`), `height1`/`height2`, or `comp radius` on the node (either as dimensionless multiples of `commtikz unit` or with explicit TeX units like `1.8cm`):
-  ```latex
-  \node[commrect, width=2.4, height=1.6] (dsp) {};
-  \node[mux, width=1.2, height1=2.6, height2=1.0] (wdm) {};
-  \node[circulator, comp radius=0.65] (circ) {};
-  ```
+## Dimensions and scaling
 
-#### Scaling the whole figure
-- **Scale all building blocks while keeping text labels at normal font size**:
-  ```latex
-  % Scales all component shapes to 80% and coordinate grid (x,y) to 80%
-  \begin{tikzpicture}[commtikz unit=0.8cm, x=0.8cm, y=0.8cm]
-    ...
-  \end{tikzpicture}
-  ```
-- **Scale only the building blocks (leaving coordinate positions unchanged)**:
-  ```latex
-  \begin{tikzpicture}[commtikz unit=0.8cm]
-    ...
-  \end{tikzpicture}
-  ```
-- **Scale the entire figure geometrically (including `positioning` distances and text)**:
-  ```latex
-  \begin{tikzpicture}[scale=0.8, every node/.style={transform shape}]
-    ...
-  \end{tikzpicture}
-  ```
+`commtikz unit` sets the base unit (default `1cm`). Dimensionless `width`,
+`height`, and `comp radius` values multiply that unit and the class scale:
 
-### 2. Adjusting Line Width to Match Your Font
-By default, `commtikz` uses a stroke width of `0.6pt` (with `0.45pt` for inner instrument display traces), which visually matches 10pt-11pt Computer Modern / Latin Modern text. You can adjust the line width globally or per `tikzpicture`:
+| Class | Scale key | Default |
+| --- | --- | --- |
+| Optical, RF, instrument, and generic blocks | `commtikz block scale` | `0.85` |
+| Electrical circuit symbols | `commtikz circuit scale` | `1.10` |
+
+For example, a `width=1, height=1` block measures 0.85×0.85 cm at the default
+unit. Ordinary boxed components share these dimensions; modulators with
+multiple paths, instruments, multi-channel receivers, and circuit symbols
+have their own proportions.
 
 ```latex
-% Automatically scale line width to 0.055em of the active document font size
-\begin{tikzpicture}[commtikz match font] ... \end{tikzpicture}
+\node[pm, commtikz scale=0.75] (mod) {};       % base unit = 0.75cm
+\node[commrect, width=2, height=1.5] (dsp) {};
+\node[commrect, width=2cm, height=1cm] (box) {}; % physical dimensions
+\node[circulator, comp radius=0.65] (circ) {};
+\node[mux, width=1.2, height1=2.6, height2=1] (mux) {};
+```
 
-% Set an explicit line width (automatically scales inner traces to 75%)
-\begin{tikzpicture}[commtikz line width=0.5pt] ... \end{tikzpicture}
+Explicit dimensions such as `width=2cm` bypass the class scale. Use
+`commtikz legacy sizes` to set both class scales to 1. Set dimensions after
+the component style when overriding a node's defaults.
 
-% Or control block outlines, inner instrument traces, and signal wires independently
+To scale component geometry and the coordinate grid together while retaining
+normal text sizes:
+
+```latex
+\begin{tikzpicture}[commtikz unit=0.8cm, x=0.8cm, y=0.8cm]
+  ...
+\end{tikzpicture}
+```
+
+For geometric scaling of the entire drawing, including text and positioning
+distances, use `scale=0.8, every node/.style={transform shape}`.
+
+## Labels and line styles
+
+Use TikZ's `label` option for external annotations. Component labels have a
+default clearance of `3pt` from the symbol boundary. Optical-arrow bounds are
+included for circuit photodiodes and LEDs, including rotated symbols.
+
+```latex
+\node[pd, label=above:Detector] (pd) {};
+\node[elpd, rotate=90, transform shape, label=above:PD] (circuitpd) {};
+\node[amp, commtikz label distance=5pt, label=above:Amplifier] (amp) {};
+```
+
+`commtikz label distance=<dimension>` sets the component clearance on a
+picture, scope, or node. A label-specific override uses standard TikZ syntax:
+`label={[label distance=1pt]above:Detector}`. Label directions follow the
+component's rotation. Separately positioned text nodes use their own
+positioning distances.
+
+Default component and signal strokes are `0.6pt`; instrument traces are
+`0.45pt`. Configure them together or independently:
+
+```latex
 \tikzset{
-  commtikz block line width=0.65pt,
-  commtikz inner line width=0.45pt,
-  commtikz signal line width=0.65pt,
+  commtikz line width=0.5pt,
+  % Alternatively:
+  % commtikz block line width=0.6pt,
+  % commtikz inner line width=0.4pt,
+  % commtikz signal line width=0.6pt,
 }
 ```
 
-### 3. Multi-Port Anchors & Port Alignment (`port span`)
-Every rectangular and trapezoidal component supports configuring the number of ports on each side via `numW`, `numE`, `numN`, `numS` or `ports={W=..., E=..., N=..., S=...}`:
+`commtikz match font` sets the line width to `0.055em` of the current font.
+Use `draw=<color>`, `text=<color>`, and `fillcol=<color>` to style components.
+`comp label=<text>` supplies internal text on shapes that support it.
+
+## Ports and connections
+
+Components provide standard compass anchors (`west`, `east`, `north`,
+`south`, corners, and `center`) and short aliases (`W`, `E`, `N`, `S`, etc.).
+Numbered side ports use zero-based names: `W0`, `W1`, `E0`, and so on.
+
+Generic blocks support configurable port counts and spacing:
 
 ```latex
-\node[commrect, width=2.4, height=1.8, ports={W=2, E=4, N=1, S=1}, comp label=DSP] (dsp) {};
-\draw[opt->] (in0) -- (dsp.W0);
-\draw[opt->] (in1) -- (dsp.W1);
-\draw[rf->]  (dsp.E0) -- (out0);
+\node[commrect, width=2.4, height=1.8,
+      ports={W=2, E=4, N=1, S=1}, comp label=DSP] (dsp) {};
 ```
 
-To align multi-port spacing between two blocks of **different widths or heights** so their connecting lines are strictly perpendicular:
-- **Method A (`port span x` / `port span y`)**: Set `port span x=<width>` (for `N`/`S` ports) or `port span y=<height>` (for `E`/`W` ports) so both blocks distribute their ports over the same span (by default, `iqm` sets `port span x=1.55` to match `awg`):
-  ```latex
-  \node[awg, numS=2] (awg) at (0, 1.8) {};
-  \node[iqm, numN=2, port span x=1.55] (iqm) at (0, 0) {};
-  \draw[rf->] (awg.S0) -- (iqm.N0); % strictly vertical
-  \draw[rf->] (awg.S1) -- (iqm.N1); % strictly vertical
-  ```
-- **Method B (`to[perp]` / `to[vperp]` / `to[hperp]` or `|-` / `-|` coordinate projection)**: Project perpendicular to the target edge without needing matching port spans:
-  ```latex
-  \draw[rf->] (awg.S0) to[perp] (iqm.north); % or: (awg.S0) -- (awg.S0 |- iqm.north);
-  \draw[rf->] (awg.S1) to[perp] (iqm.north);
-  ```
+`numW`, `numE`, `numN`, and `numS` set counts individually. `port span x`
+controls N/S spacing, `port span y` controls W/E spacing, and `port order`
+selects `top to bottom` or `bottom to top` for W/E ports.
 
-### 4. Signal Connectors, Circular Bends (90°/180°) & Inline Components
-The `bend=<radius>` (default `0.22cm`) and `uturn` / `uturn left` styles work with **all** connection types (`opt`, `rf`, `optrf`, `dc`, `ctrl`, or general paths). Convenience domain shorthands `opt bend`, `rf bend`, `optrf bend`, `dc bend`, and `ctrl bend` combine the domain style with `bend`:
+Components with fixed internal paths require these W/E counts:
+
+| Styles | West count | East count |
+| --- | --- | --- |
+| `splitter` | 1 | 2 |
+| `combiner` | 2 | 1 |
+| `dcoupler` | 2 | 2 |
+| `hybrid90` | 2 | 4 |
+| `bpd`, `opamp` / `tia` | 2 | 1 |
+| `pm`, `mzm`, `iqm`, `ringmod` | 1 | 1 |
+
+These shapes require top-to-bottom port order and full-height W/E spacing;
+incompatible settings or unavailable numbered ports raise a package error.
+N/S control-port counts remain configurable.
+
+Semantic anchors include:
+
+- `sig`, `lo`, `I+`, `I-`, `Q+`, `Q-` on `hybrid90`.
+- `rf`, `dc`, `rfdc` on `biastee`.
+- `in-`, `in+`, `out` on `opamp`; `mirror flip` swaps input polarity.
+- `G`, `D`, `S` on `nmos` and `B`, `C`, `E` on `npn`.
+- `bus in`, `bus out` on `ringmod`; `drop in`, `drop out` require `add drop`.
+- `1` (west), `2` (east), `3` (south), `4` (north) on `circulator`.
+
+For example:
 
 ```latex
-% 90-degree circular bends on any connection type (opt, rf, optrf, dc, ctrl)
-\draw[opt, bend=0.22cm, ->-=0.75] (a.E0) |- (b.W0);   % or \draw[opt bend=0.22cm, ...]
-\draw[rf, bend=0.18cm, rf->]      (c.S0) |- (d.W0);   % or \draw[rf bend=0.18cm, ...]
-\draw[dc bend=0.18cm, dc->]       (vdd)  -| (amp.N0);
+\node[ringmod, add drop] (ring) {};
+\draw[opt] (-2,0) -- (ring.bus in);
+\draw[opt] (ring.bus out) -- (2,0);
+\draw[opt] (ring.drop out) -- ++(1,0);
+```
 
-% 180-degree semicircular U-turns (work on opt, rf, optrf, dc, ctrl)
-\draw[opt, ->-] (a.E0) to[uturn] (b.E0);
-\draw[rf, ->-]  (c.W0) to[uturn left] (d.W0);
+### Signal paths and routing
 
-% S-curve and arc Bezier connectors
-\draw[opt, ->-] (a.E0) to[arcz] (b.W0);
-\draw[rf, ->-]  (a.E0) to[arc2=25] (b.W0);
+| Style | Color |
+| --- | --- |
+| `opt` | `OPTcol` — blue |
+| `rf` | `RFcol` — red |
+| `optrf` | `OPTRFcol` — purple |
+| `dc` | `DCcol` — green |
+| `ctrl` | `CTRLcol` — gray, dashed |
 
-% Inline component placement along a path (fiberspool matches path color automatically)
+Signal paths render behind component nodes. Add an endpoint arrow with
+`opt->`, `rf->`, `optrf->`, `dc->`, or `ctrl->`; use `->-` / `-<-` for a
+mid-path arrow and `->>-` / `-<<-` for paired mid-path arrows.
+
+```latex
+\draw[opt, ->-] (a.E0) to[arcz] (b.W0);       % smooth S-curve
+\draw[rf, bend=2mm, ->-] (c.S0) |- (d.W0);   % rounded corner
+\draw[opt] (a.E0) to[uturn] (b.E0);          % semicircular return
+\draw[rf->] (drive.S0) to[perp] (mod.north); % perpendicular projection
+```
+
+Other routing helpers include `arcn`, `arc2`, `arc3`, `arcloop`, `uturn left`,
+`hvh`, and `vhv`. `port span x=1.55` on IQM matches AWG's default N/S span
+when both use the same unit and block scale.
+
+### Inline components and colors
+
+Place two-port components on straight paths using `to[inline={...}]` or a
+shorthand:
+
+```latex
 \draw[opt] (0,0) to[to fiberspool={label=above:SMF}] (3,0)
-                 to[to voa={label=above:VOA}] (6,0);
+                 to[to voa] (6,0);
+\draw[rf] (0,-2) to[to R={label=above:$R$}] (3,-2);
+\draw[optrf] (0,-4) to[to coupler] (3,-4);
 ```
 
----
+Inline shorthands cover fiber spools, couplers, optical controllers and
+modulators, filters, amplifiers, and circuit passives/diodes. They rotate the
+component with the path; `inline upright={...}` retains its orientation.
 
-## Component Reference
+Standalone couplers and fiber spools use the current drawing color (normally
+black). Their inline shorthands inherit the connector color. An explicit
+option such as `to coupler={draw=black}` overrides that color. Separately
+placed nodes can be colored with `draw=<color>`.
 
-### 1. Core Optical & System Building Blocks
-- **Generic Blocks & Tap**: `commrect` (`rectblock`), `commsquare` (`squareblock`), `commcircle` (`circleblock`), `couplercirc` (`coupler`)
-- **Passive & Free-Space Optics**: `bs` (`beamsplitter`), `pbs`, `mirror`, `polarizer`, `waveplate` (`hwp`, `qwp`), `fiberspool` (`fiber`, `smf`), `polctrl` (`pc`), `voa`, `fbg`, `circulator`, `isolator` (`iso`), `mux`, `demux`, `splitter`, `combiner`, `dcoupler`
-- **Modulators, Sources & Detectors**: `pm` (`phasemod`), `mzm`, `iqm` (`dpmzm`), `ringmod` (`mrr`), `phaseshifter`, `ld` (`laser`), `pd` (`photodiode`), `bpd`, `hybrid90`, `edfa`, `soa`
-- **Test & Measurement Instruments**: `osa`, `esa`, `awg`, `osc` (`scope`, `dso`)
+## Documentation and validation
 
-### 2. RF, Analog & DSP Building Blocks
-- **Filters**: `filter`, `lpf` (`response=lp`), `bpf` (`response=bp`, `obpf`), `hpf` (`response=hp`), `notchfilter` (`response=notch`)
-- **Amplifiers & Conditioning**: `amp`, `vga`, `biastee`, `rfatt`, `termination` (`term`)
-- **Data Converters, Mixers & Oscillators**: `adc`, `dac`, `mixer`, `sum`, `sumsigma`, `oscillator` (`lo`), `oscillatorbox`, `demod`
+Build the [component catalog and examples](commtikz-doc.pdf) with `make doc`,
+or compile `commtikz-doc.tex` twice with `pdflatex`.
 
-### 3. Electronic & Electrical Circuit Components (`commtikz.electrical`)
-- **Passives**: `resistor` (`R`, `rbox`, `to resistor`, `to R`), `capacitor` (`C`, `to capacitor`, `to C`), `inductor` (`L`, `to inductor`, `to L`)
-- **Diodes & Optoelectronics**: `diode` (`D`, `to diode`, `to D`), `zener` (`to zener`), `elpd` (`cktpd`, `to elpd`), `elld` (`led`, `to elld`)
-- **Sources & Rails**: `vsource` (`dcvoltage`, `to vsource`), `isource` (`dccurrent`, `to isource`), `acsource` (`rfsource`, `to acsource`), `ground` (`gnd`), `vcc` (`vdd`), `edot` (`junction`)
-- **Active Devices & Transistors**: `opamp` (`tia`), `nmos` (`fet`), `npn` (`bjt`)
+Run `make check` or `python3 tests/check.py` for geometry, port, color, and
+arrowhead checks. Visual sheets are written to
+`/tmp/commtikz-check/components.pdf`.
 
----
-
-## Repository Structure
-
-| File | Description |
-| :--- | :--- |
-| [`commtikz.sty`](commtikz.sty) | LaTeX package wrapper (`\usepackage{commtikz}`) |
-| [`tikzlibrarycommtikz.code.tex`](tikzlibrarycommtikz.code.tex) | Main TikZ library entrypoint (`\usetikzlibrary{commtikz}`) & color palette |
-| [`tikzlibrarycommtikz.base.code.tex`](tikzlibrarycommtikz.base.code.tex) | PGF keys, line-width controls, dynamic multi-port anchor engine, and base block shapes (`commrect`, `commcircle`, `commsquare`) |
-| [`tikzlibrarycommtikz.optical.code.tex`](tikzlibrarycommtikz.optical.code.tex) | Optical, fiber, and electro-optical PGF shapes (`mzm`, `iqm`, `pm`, `ld`, `pd`, `bpd`, `hybrid90`, `mux`, `circulator`, `fiberspool`, `polctrl`, `voa`, `fbg`, `bs`, `pbs`, `ringmod`, `phaseshifter`, etc.) |
-| [`tikzlibrarycommtikz.instruments.code.tex`](tikzlibrarycommtikz.instruments.code.tex) | Lab instrument shapes with waveform/spectrum screens and control panel buttons (`osa`, `esa`, `awg`, `osc`/`scope`/`dso`) |
-| [`tikzlibrarycommtikz.rf.code.tex`](tikzlibrarycommtikz.rf.code.tex) | RF, analog, and DSP shapes (`amp`, `vga`, `edfa`, `soa`, `filter`, `lpf`/`bpf`/`hpf`/`notchfilter`, `adc`, `dac`, `mixer`, `sum`, `sumsigma`, `oscillator`, `demod`, `biastee`, `rfatt`, `termination`) |
-| [`tikzlibrarycommtikz.electrical.code.tex`](tikzlibrarycommtikz.electrical.code.tex) | Electronic and electrical circuit components (`resistor`, `capacitor`, `inductor`, `diode`, `zener`, `elpd`, `elld`, `vsource`, `isource`, `acsource`, `ground`, `vcc`, `opamp`/`tia`, `nmos`, `npn`) |
-| [`tikzlibrarycommtikz.paths.code.tex`](tikzlibrarycommtikz.paths.code.tex) | Background-layer signal path styles, rounded waveguide bends (`opt bend`, `waveguide bend`, `uturn`), Bezier connectors, and `to[...]` inline path placement |
-| [`commtikz-doc.tex`](commtikz-doc.tex) / [`commtikz-doc.pdf`](commtikz-doc.pdf) | Full visual component catalog and example electro-optical setup schematics |
-| [`Makefile`](Makefile) | Build automation for `commtikz-doc.pdf` |
-
----
-
-## Building the Documentation
-
-Compile [`commtikz-doc.pdf`](commtikz-doc.pdf) using `pdflatex` (or `make doc`):
-
-```bash
-pdflatex commtikz-doc.tex
-```
-
----
+The implementation is split into `base`, `optical`, `instruments`, `rf`,
+`electrical`, and `paths` TikZ libraries, loaded by `commtikz.sty` or
+`\usetikzlibrary{commtikz}`.
 
 ## License
 
-Released under the [MIT License](LICENSE).
+[MIT](LICENSE).
